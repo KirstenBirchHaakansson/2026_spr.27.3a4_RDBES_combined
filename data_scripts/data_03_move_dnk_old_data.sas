@@ -42,8 +42,8 @@ set in.ices_catch;
 data out.length;
 set in.length;
 
-*data out.new_sandeel_areas_incl_3a;
-*set in.new_sandeel_areas_incl_3a;
+data out.new_sandeel_areas_incl_3a;
+set in.new_sandeel_areas_incl_3a;
 
 *data out.sms_ns_2011;
 *set in.sms_ns_2011;
