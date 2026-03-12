@@ -111,15 +111,15 @@ draft.data(data.files = "submitted_data/SE_SE_2026 DC HAWG spr.27.3a4 YellowShee
            file = T,
            append = T)
 
-# draft.data(data.files = "data_from_last_year",
-#            data.scripts = NULL,
-#            originator = "HAWG",
-#            title = "Data from last years",
-#            period = "2023",
-#            access = "Restricted",
-#            file = T,
-#            append = T)
-# 
+draft.data(data.files = "data_from_bm",
+           data.scripts = NULL,
+           originator = "HAWG",
+           title = "Data from benchmark",
+           period = "-2024",
+           access = "Restricted",
+           file = T,
+           append = T)
+
 # draft.data(data.files = "old_input_files",
 #            data.scripts = NULL,
 #            originator = "Anna",
