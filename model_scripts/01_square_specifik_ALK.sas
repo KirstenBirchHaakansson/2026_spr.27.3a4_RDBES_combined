@@ -3,7 +3,7 @@
 %let update = 'partial'; *all|partial;
 %let years_to_update_first = 2024;
 %let years_to_update_last = 2026;
-%let years_not_dnk = 2025;
+%let year = 2025;
 
 libname in 'C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\stock_coord_work\spr.27.3a4\2026_spr.27.3a4_RDBES_combined\data';
 libname out 'C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\stock_coord_work\spr.27.3a4\2026_spr.27.3a4_RDBES_combined\model';
@@ -11,6 +11,8 @@ libname model 'C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\stock_coor
 
 %let path_model = C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\stock_coord_work\spr.27.3a4\2026_spr.27.3a4_RDBES_combined\model_scripts;
 %let path_area = C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\stock_coord_work\spr.27.3a4\2026_spr.27.3a4_RDBES_combined\utils\area_relation;
+
+%let old_alk_fil_name = alk17_intsq_benchmark;
 
 PROC IMPORT OUT= WORK.area_relation
             DATAFILE= "&path_area./sprat_area_relation.csv" 
@@ -21,7 +23,7 @@ PROC IMPORT OUT= WORK.area_relation
 RUN;
 
 data no1;
-set in.norwegian_alk_&years_not_dnk.;
+set in.norwegian_alk_&year.;
 do age=0,1,2,3,4;
 output;
 end;
@@ -107,6 +109,22 @@ area=latlon;
 area2=200*floor(lat/2)+4*floor(lon/4);
 quarter=floor((month-1)/3)+1;
 run;
+
+************************20260312 Included after BM 2025********************************;
+data in1;
+set in1;
+if &update. = 'all' then do;
+ output;
+end;
+if &update. = 'partial' then do;
+	if year <  &years_to_update_first. then delete;
+	if year >  &years_to_update_last. then delete;
+	output;
+end;
+
+run;
+
+***************************************************************************************;
 
 ** Check lengths;
 proc sql;
@@ -362,7 +380,7 @@ run;
 
 data l3c;
 set l3b;
-do year=1974 to 2025 by 1;
+do year = &years_to_update_first. to &years_to_update_last. by 1; *20260312 Changed after BM 2025;
 output;
 end;
 run;
@@ -631,13 +649,17 @@ by year quarter area3 area intsq scm;
 output out=l15 max=;
 run;
 
-*data l16;
-*set spr.alk16_intsq_incl_3a;
-*if year gt 2015 then delete;
-*run;
+***************20260312 Included after BM 2025***************;
 
-data out.alk17_intsq_benchmark;
-set l15 ;
+data l16; 
+set in.&old_alk_fil_name.;
+if year ge &years_to_update_first. then delete;
+run;
+
+************************************************************;
+
+data out.alk_intsq_&year.;
+set l15 l16; *20260312 Included l16 after BM 2025;
 if intsq='' then delete;
 drop _type_ _freq_;
 run;
