@@ -1,8 +1,16 @@
-/**/
-libname in 'C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\gits\spr.27.3a4_commercial_catch\data\03_assessement_2025';
-libname out 'C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\gits\spr.27.3a4_commercial_catch\output\14_update_to_2025';
 
-%let path_area = C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\gits\spr.27.3a4_commercial_catch\utils\area_relation;
+%let update = 'partial'; *all|partial;
+%let years_to_update_first = 2024;
+%let years_to_update_last = 2026;
+%let year = 2025;
+
+libname in 'C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\stock_coord_work\spr.27.3a4\2026_spr.27.3a4_RDBES_combined\data';
+libname out 'C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\stock_coord_work\spr.27.3a4\2026_spr.27.3a4_RDBES_combined\model';
+
+%let path_model = C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\stock_coord_work\spr.27.3a4\2026_spr.27.3a4_RDBES_combined\model;
+%let path_area = C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\stock_coord_work\spr.27.3a4\2026_spr.27.3a4_RDBES_combined\utils\area_relation;
+
+%let new_alk_file_name = alk_intsq_&year.;
 
 PROC IMPORT OUT= WORK.area_relation
             DATAFILE= "&path_area./sprat_area_relation.csv" 
@@ -13,7 +21,7 @@ PROC IMPORT OUT= WORK.area_relation
 RUN;
 
 data nl1;
-set in.norwegian_length_2024;
+set in.norwegian_length_&year.;
 day=date-100*floor(date/100);
 month=(date-10000*floor(date/10000)-day)/100;
 year=floor(date/10000)+2000;
@@ -32,7 +40,7 @@ drop station date icessq scm total_number_length_class;
 run;
 
 data nl2;
-set in.norwegian_alk_2024;
+set in.norwegian_alk_&year.;
 day=date-100*floor(date/100);
 month=(date-10000*floor(date/10000)-day)/100;
 year=floor(date/10000)+2000;
@@ -100,6 +108,22 @@ dec=floor(year/10);
 
 *if year lt 2015 then delete;
 run;
+
+************************20260312 Included after BM 2025********************************;
+data in1;
+set in1;
+if &update. = 'all' then do;
+ output;
+end;
+if &update. = 'partial' then do;
+	if year <  &years_to_update_first. then delete;
+	if year >  &years_to_update_last. then delete;
+	output;
+end;
+
+run;
+
+***************************************************************************************;
 
 * Check length;
 proc sql;
@@ -261,12 +285,12 @@ proc sort data=l7;
 by year intsq quarter scm;
 run;
 
-proc sort data=out.alk17_intsq_benchmark;
+proc sort data=out.&new_alk_file_name.;
 by year intsq quarter scm;
 run;
 
 data l8;
-merge l7 out.alk17_intsq_benchmark;
+merge l7 out.&new_alk_file_name.;
 by year intsq quarter scm;
 run;
 
@@ -451,7 +475,7 @@ by quarter;
 run;
 
 data i1;
-set in.new_sandeel_areas_incl_3a;
+set in.new_sandeel_areas_incl_3a; *This is not so nice - todo test use of area_relation;
 intsq='    ';
 intsq=square;
 keep intsq;
@@ -463,7 +487,7 @@ run;
 
 data i3;
 set i2;
-do year=1974 to 2025 by 1;
+do year = &years_to_update_first. to &years_to_update_last. by 1; *20260312 Changed after BM 2025;
 output;
 end;
 run;
@@ -1043,7 +1067,8 @@ if p2=. then p2=newp2;
 if p3=. then p3=newp3;
 if p4=. then p4=newp4;
 if p1=. then level=.;
-*if year le 2015 then delete;
+
+if year le &years_to_update_first. then delete;
 
 drop newn0-newn4 newmw0-newmw4 newml0-newml4 newmc0-newmc4 newp0-newp4 lnew;
 run;
@@ -1064,26 +1089,28 @@ merge m9 m16;
 by year quarter intsq;
 run; 
 
-*data m17a;
-*set spr.mean_weight_and_n_per_kg_2016;
-*if year ge 2016 then delete;
-*run;
+***************20260312 Included after BM 2025***************;
+data m17a;
+set in.mean_weight_and_n_per_kg_bench;
+if year ge &years_to_update_first. then delete;
+run;
+************************************************************;
 
-data out.mean_weight_and_n_per_kg_bench;
-set m17;
+data out.mean_weight_and_n_per_kg_&year.;
+set m17a m17; *20260312 Included l16 after BM 2025;
 if n_samples=. then n_samples=0;
 if n1_per_kg=. then delete;
 
 run;
 
-proc export data=out.mean_weight_and_n_per_kg_bench
-   outfile='C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\gits\spr.27.3a4_commercial_catch\output\03_benchmark_2018\numbers_at_age_per_kg_and_mean_weight_2018_benchmark.csv'
+proc export data=out.mean_weight_and_n_per_kg_&year.
+   outfile="&path_model.\numbers_at_age_per_kg_and_mean_weight_&year..csv"
    dbms=csv 
    replace;
 run;
 quit;
 
-proc sort data=spr.mean_weight_and_n_per_kg_bench out=m17;
+proc sort data=out.mean_weight_and_n_per_kg_&year. out=m17;
 by year quarter;
 run;
 
