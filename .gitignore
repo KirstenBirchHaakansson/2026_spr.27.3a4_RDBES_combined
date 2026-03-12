@@ -18,3 +18,11 @@ report/
 output/
 presentations_and_other_awg_stuff/
 2026_spr.27.3a4_RDBES_combined.Rproj
+/boot/data
+/boot/library
+/boot/software
+/data
+/model
+/output
+/report
+*.Rproj
