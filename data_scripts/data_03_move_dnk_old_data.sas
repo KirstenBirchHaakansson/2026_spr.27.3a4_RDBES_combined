@@ -1,7 +1,7 @@
 
 *********** DNK data; 
-libname in "C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\stock_coord_work\spr.27.3a4\2025_spr.27.3a4_RDBES_combined\boot\data";
-libname out "C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\stock_coord_work\spr.27.3a4\2025_spr.27.3a4_RDBES_combined\data";
+libname in "C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\stock_coord_work\spr.27.3a4\2026_spr.27.3a4_RDBES_combined\boot\data";
+libname out "C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\stock_coord_work\spr.27.3a4\2026_spr.27.3a4_RDBES_combined\data";
 
 
 data out.age_including_survey;
@@ -52,12 +52,12 @@ run;
 
 
 *********** data_from_last_year; 
-libname in "C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\stock_coord_work\spr.27.3a4\2025_spr.27.3a4_RDBES_combined\boot\data\data_from_last_year";
+libname in "C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\stock_coord_work\spr.27.3a4\2026_spr.27.3a4_RDBES_combined\boot\data\data_from_bm";
 
-data out.alk23_intsq;
-set in.alk23_intsq;
+data out.alk24_intsq;
+set in.alk17_intsq_benchmark;
 
-data out.mean_weight_and_n_per_kg_2023;
-set in.mean_weight_and_n_per_kg_2023;
+data out.mean_weight_and_n_per_kg_2024;
+set in.mean_weight_and_n_per_kg_bench;
 
 run;
