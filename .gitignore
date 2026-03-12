@@ -13,6 +13,7 @@ boot/data/
 boot/initial/
 
 data/
+model/
 report/
 output/
 presentations_and_other_awg_stuff/
@@ -21,6 +22,7 @@ presentations_and_other_awg_stuff/
 /boot/library
 /boot/software
 /data
+/model
 /output
 /report
 *.Rproj
