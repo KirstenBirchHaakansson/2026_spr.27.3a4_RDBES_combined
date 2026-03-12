@@ -7,17 +7,19 @@ library(stringr)
 
 mkdir("data")
 
+years <- c(2024:2026)
 
-bel_file <- "BE_2025 DC HAWG spr.27.4 BEL landings_v2.xls"
-deu_file <- "DE_2025 DC HAWG spr.27.4 DE landings_v2.xls"
+
+bel_file <- "BE_2026 DC HAWG spr.27.4 BEL landings.xls"
+deu_file <- "DE_2026 DC HAWG spr.27.4 DE landings.xls"
 sco_file <-
-  "2025 DC HAWG spr27.3a4 spr.27.67a-cf-k SCO exchange spreadsheet.xls"
-dnk_file <- "DC_Annex_HAWG2 sprat template_DNK_2023_2025.xlsx"
+  "GB-SCT_2026 DC HAWG spr27.3a4 spr.27.67a-cf-k SCO exchange spreadsheet.xls"
+dnk_file <- "DC_Annex_HAWG2 spr.27.3a4 template_DNK_2023_2025.xlsx"
 # ltu_file <- "DC_Annex_7.1.1. HAWG LTU_2020.xls" # Only herring
-nor_file <- "NO_DC_Annex_HAWG2 sprat_NOR2024.xls"
-swe_file <- "SE_2025 DC HAWG spr.27.3a4 YellowSheet.xls"
-nld_file <- "2025_NLD_HAWG Sprat template.xls"
-eng_file <- "DC_Annex_HAWG2 sprat template 2025 UK EW.xls"
+nor_file <- "NO_2026 DC HAWG spr.27.3a4 NO.xls"
+swe_file <- "SE_SE_2026 DC HAWG spr.27.3a4 YellowSheet_v2.xls"
+nld_file <- "2026_NLD_HAWG Sprat template.xls"
+eng_file <- "DC_Annex_HAWG2 spr.27.3a4 template 2025 UK EW.xls"
 # fra_file <- "FRA_2022.xls"
 
 
@@ -73,7 +75,7 @@ cat_div <-
     nld_cat_div,
     eng_cat_div
   )
-cat_div_1 <- subset(cat_div, Year %in% c(2023, 2024, 2025))
+cat_div_1 <- subset(cat_div, Year %in% c(2024, 2025, 2026))
 
 ## correct naming of subdivision
 unique(cat_div_1$Subarea)
@@ -89,14 +91,15 @@ cat_div_1$Subarea[cat_div_1$Subarea %in% c("3aN")] <- "27.3.a.20"
 cat_div_1$Subarea[cat_div_1$Subarea %in% c("27.6a", "6A")] <-
   "27.6.a"
 cat_div_1$Subarea[cat_div_1$Subarea %in% c("27.7a")] <- "27.7.a"
-cat_div_1$Subarea[cat_div_1$Subarea %in% c("7d")] <- "27.7.d"
+cat_div_1$Subarea[cat_div_1$Subarea %in% c("7d", "7D")] <- "27.7.d"
+cat_div_1$Subarea[cat_div_1$Subarea %in% c("7e", "7E")] <- "27.7.e"
 
 unique(cat_div_1$Subarea)
 
 names(cat_div_1) <- tolower(names(cat_div_1))
 
 write.csv(cat_div_1,
-          paste0("data/", "catches_div_2023_2025.csv"),
+          paste0("data/", "catches_div_2024_2026.csv"),
           row.names = F)
 
 # Check figures against submissions
@@ -230,11 +233,11 @@ swe_samp_alk <-
 swe_samp_alk$date_old <- swe_samp_alk$Date
 swe_samp_alk$Date <-
   as.Date(as.character(swe_samp_alk$Date), "%y%m%d")
-# nor_samp_alk <-
-#   read_excel(paste0("boot/data/", nor_file), sheet = 4)[, c(1:14)] # bingo
-# nor_samp_alk$date_old <- nor_samp_alk$Date
-# nor_samp_alk$Date <-
-#   as.Date(as.character(nor_samp_alk$Date), "%y%m%d")
+nor_samp_alk <-
+  read_excel(paste0("boot/data/", nor_file), sheet = 4)[, c(1:14)] # bingo
+nor_samp_alk$date_old <- nor_samp_alk$Date
+nor_samp_alk$Date <-
+  as.Date(as.character(nor_samp_alk$Date), "%y%m%d")
 dnk_samp_alk <-
   read_excel(paste0("boot/data/", dnk_file), sheet = 4)[, c(1:14)] # bingo
 dnk_samp_alk$date_old <- dnk_samp_alk$Date
@@ -242,10 +245,10 @@ dnk_samp_alk$Date <-
   as.Date(as.character(dnk_samp_alk$Date), "%Y%m%d")
 
 names(swe_samp_alk)
-# names(nor_samp_alk)
+names(nor_samp_alk)
 names(dnk_samp_alk)
 
-samp_alk <- rbind(swe_samp_alk, dnk_samp_alk)#, nor_samp_alk)
+samp_alk <- rbind(swe_samp_alk, dnk_samp_alk, nor_samp_alk)
 head(samp_alk)
 
 samp_alk <-
@@ -258,7 +261,7 @@ samp_alk <-
     quarter = quarter(Date)
   )
 
-samp_alk_1 <- subset(samp_alk, year %in% c(2023, 2024, 2025))
+samp_alk_1 <- subset(samp_alk, year %in% years)
 
 unique(samp_alk_1$length_mm)
 
@@ -267,7 +270,7 @@ names(samp_alk_1)
 samp_alk_1 <- rename(samp_alk_1, c("noage4" = "noage4+"))
 
 write.csv(samp_alk_1,
-          paste0("data/", "alk_samples_2023_2025.csv"),
+          paste0("data/", "alk_samples_", min(years), "_", max(years), ".csv"),
           row.names = F)
 
 ## Output to Anna's script
@@ -278,7 +281,7 @@ samp_alk_a_1 <- subset(samp_alk_a, country != "DK")
 
 write.csv(
   samp_alk_a_1,
-  paste0("data/", "alk_samples_original_format_no_dnk_2024_2025.csv"),
+  paste0("data/", "alk_samples_original_format_no_dnk_", min(years), "_", max(years), ".csv"),
   row.names = F,
   na = ""
 )
@@ -293,12 +296,12 @@ swe_samp_ld$Date <-
   as.Date(as.character(swe_samp_ld$Date), "%y%m%d")
 swe_samp_ld <- rename(swe_samp_ld, "ICESsq" = "Statrec")
 
-# nor_samp_ld <-
-#   read_excel(paste0("boot/data/", nor_file), sheet = 5)[, c(1:6)] # bingo
-# nor_samp_ld$date_old <- nor_samp_ld$Date
-# nor_samp_ld$Date <-
-#   as.Date(as.character(nor_samp_ld$Date), "%y%m%d")
-# nor_samp_ld <- rename(nor_samp_ld, "ICESsq" = "Statrec")
+nor_samp_ld <-
+  read_excel(paste0("boot/data/", nor_file), sheet = 5)[, c(1:6)] # bingo
+nor_samp_ld$date_old <- nor_samp_ld$Date
+nor_samp_ld$Date <-
+  as.Date(as.character(nor_samp_ld$Date), "%y%m%d")
+nor_samp_ld <- rename(nor_samp_ld, "ICESsq" = "Statrec")
 
 dnk_samp_ld <-
   read_excel(paste0("boot/data/", dnk_file), sheet = 5)[, c(1:6)] # bingo
@@ -308,10 +311,10 @@ dnk_samp_ld$Date <-
 dnk_samp_ld <- rename(dnk_samp_ld, "ICESsq" = "Statrec")
 
 names(swe_samp_ld)
-# names(nor_samp_ld)
+names(nor_samp_ld)
 names(dnk_samp_ld)
 
-samp_ld <- rbind(swe_samp_ld, dnk_samp_ld) #nor_samp_ld, 
+samp_ld <- rbind(swe_samp_ld, dnk_samp_ld, nor_samp_ld)
 head(samp_ld)
 
 samp_ld <-
@@ -324,14 +327,14 @@ samp_ld <-
     quarter = quarter(Date)
   )
 
-samp_ld_1 <- subset(samp_ld, year %in% c(2023, 2024, 2025))
+samp_ld_1 <- subset(samp_ld, year %in% years)
 
 unique(samp_ld_1$length_mm)
 
 names(samp_ld_1) <- tolower(names(samp_ld_1))
 
 write.csv(samp_ld_1,
-          paste0("data/", "ld_samples_2023_2025.csv"),
+          paste0("data/", "ld_samples_", min(years), "_", max(years), ".csv"),
           row.names = F)
 
 ## Output to Anna's script
@@ -341,7 +344,7 @@ samp_ld_a_1 <- subset(samp_ld_1, country != "DK")
 
 write.csv(
   samp_ld_a_1,
-  paste0("data/", "ld_samples_original_format_no_dnk_2024_2025.csv"),
+  paste0("data/", "ld_samples_original_format_no_dnk_", min(years), "_", max(years), ".csv"),
   row.names = F
 )
 
@@ -351,20 +354,21 @@ write.csv(
 swe_samp <-
   read_excel(paste0("boot/data/", swe_file), sheet = 6)[, c(1:8)] # bingo
 swe_samp <- rename(swe_samp, "Catch_in_ton" = "Catch_in_tonnes")
-# nor_samp <-
-#   read_excel(paste0("boot/data/", nor_file), sheet = 6)[, c(1:8)] # bingo
+nor_samp <-
+  read_excel(paste0("boot/data/", nor_file), sheet = 6)[, c(1:8)] # bingo
+nor_samp <- rename(nor_samp, "Catch_in_ton" = "Catch_in_tonnes")
 dnk_samp <-
   read_excel(paste0("boot/data/", dnk_file), sheet = 6)[, c(1:8)] # bingo
 dnk_samp <- rename(dnk_samp, "Catch_in_ton" = "Catch_in_tonnes")
 
 names(swe_samp)
 names(dnk_samp)
-# names(nor_samp)
+names(nor_samp)
 
-samp <- rbind(swe_samp, dnk_samp) #, nor_samp)
+samp <- rbind(swe_samp, dnk_samp, nor_samp)
 head(samp)
 
-samp_1 <- subset(samp, Year %in% c(2023, 2024, 2025))
+samp_1 <- subset(samp, Year %in% years)
 
 ## correct naming of subdivision
 unique(samp_1$Subarea)
@@ -386,5 +390,5 @@ unique(samp_1$Subarea)
 names(samp_1) <- tolower(names(samp_1))
 
 write.csv(samp_1,
-          paste0("data/", "no_samples_2023_2025.csv"),
+          paste0("data/", "no_samples", min(years), "_", max(years), ".csv"),
           row.names = F)
