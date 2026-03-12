@@ -54,10 +54,10 @@ run;
 *********** data_from_last_year; 
 libname in "C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\stock_coord_work\spr.27.3a4\2026_spr.27.3a4_RDBES_combined\boot\data\data_from_bm";
 
-data out.alk24_intsq;
+data out.alk17_intsq_benchmark;
 set in.alk17_intsq_benchmark;
 
-data out.mean_weight_and_n_per_kg_2024;
+data out.mean_weight_and_n_per_kg_bench;
 set in.mean_weight_and_n_per_kg_bench;
 
 run;
