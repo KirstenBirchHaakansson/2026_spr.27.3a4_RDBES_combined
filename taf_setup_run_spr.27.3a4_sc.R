@@ -120,12 +120,12 @@ draft.data(data.files = "data_from_bm",
            file = T,
            append = T)
 
-# draft.data(data.files = "old_input_files",
-#            data.scripts = NULL,
-#            originator = "Anna",
-#            title = "Files needed for the SAS script",
-#            file = T,
-#            append = T)
+draft.data(data.files = "old_input_files",
+           data.scripts = NULL,
+           originator = "Anna",
+           title = "Files needed for the SAS script",
+           file = T,
+           append = T)
 
 # 
 # draft.data(data.files = "time_series",
