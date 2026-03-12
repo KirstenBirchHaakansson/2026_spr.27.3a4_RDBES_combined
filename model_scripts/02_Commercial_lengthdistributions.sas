@@ -1068,7 +1068,7 @@ if p3=. then p3=newp3;
 if p4=. then p4=newp4;
 if p1=. then level=.;
 
-if year le &years_to_update_first. then delete;
+if year lt &years_to_update_first. then delete;
 
 drop newn0-newn4 newmw0-newmw4 newml0-newml4 newmc0-newmc4 newp0-newp4 lnew;
 run;
