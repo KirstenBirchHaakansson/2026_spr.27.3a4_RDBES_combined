@@ -13,7 +13,7 @@ set in.length_including_survey;
 run;
 
 *********** old input files data; 
-libname in "C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\stock_coord_work\spr.27.3a4\2025_spr.27.3a4_RDBES_combined\boot\data\old_input_files";
+libname in "C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\stock_coord_work\spr.27.3a4\2026_spr.27.3a4_RDBES_combined\boot\data\old_input_files";
 
 data out.dk_spr_catch_82_88;
 set in.dk_spr_catch_82_88;
@@ -42,11 +42,11 @@ set in.ices_catch;
 data out.length;
 set in.length;
 
-data out.new_sandeel_areas_incl_3a;
-set in.new_sandeel_areas_incl_3a;
+*data out.new_sandeel_areas_incl_3a;
+*set in.new_sandeel_areas_incl_3a;
 
-data out.sms_ns_2011;
-set in.sms_ns_2011;
+*data out.sms_ns_2011;
+*set in.sms_ns_2011;
 
 run;
 
