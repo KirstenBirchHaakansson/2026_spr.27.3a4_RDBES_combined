@@ -1,0 +1,182 @@
+---
+title: "plot_sandeel_areas"
+author: "Kirsten Birch Håkansson, DTU Aqua"
+date: /today
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+
+library(dplyr)
+library(ggplot2)
+library(mapplots)
+# library(rgdal)
+library(ggmap)
+library(sf)
+# library(maptools)
+# install.packages('rgeos', type='source')
+# install.packages('rgdal', type='source')
+
+path_shape <- "Q:/50-radgivning/02-mynd/kibi/EverythingInOnePlace/shapeFiles"
+
+path_data <- "C:/Users/kibi/OneDrive - Danmarks Tekniske Universitet/gits/spr.27.3a4_commercial_catch/utils/area_relation/"
+
+knitr::opts_chunk$set(echo = F, warning = F, message = F, fig.width = 8, fig.height = 8, dpi = 900, dev = 'jpeg', results = 'asis')
+# , fig.path = path_figures)
+
+col_area <- c("#1170aa", "#fc7d0b", "#a3acb9", "#a3cce9", "#5fa2ce", 
+              "#c85200", "#ffbc79", "#c8d0d9", "pink", "black", 
+               "magenta", "red", "yellow")
+# 
+# , "#c8d0d9",
+#           "#57606c","#7b848f", "black", "white")
+
+#          "#ffbc79", "#c8d0d9") "#57606c","#7b848f"
+
+square <- st_read(dsn=path_shape, layer="ICES_Statistical_Rectangles_Eco") %>% st_transform(4326)
+country <- st_read(dsn=path_shape, layer="country") %>% st_transform(4326)
+```
+
+# create a complete list of rectangles
+```{r}
+rect_0 <- read.csv(paste0(path_data, "RFA_ICESrect.csv"))
+names(rect_0)
+rect_0 <- rename(rect_0, rect = SubArea, RFA = Area)
+
+rect_1 <- read.csv(paste0(path_data, "list_areas.csv"))
+names(rect_1)
+rect_1 <- rename(rect_1, rect = square, san_area = Area)
+rect_1 <- select(rect_1, -PP_ar_tx) #PP_ar_tx this is not RFA areas
+
+rect_2 <- read.csv(paste0(path_data, "sprat_areas_from_anbes.csv"))
+names(rect_2)
+rect_2 <- rename(rect_2, rect = Square, spr_div = area3)
+
+rect <- full_join(full_join(rect_0, rect_1), rect_2)
+rect$RFA <- as.character(rect$RFA)
+str(rect)
+
+rect <- subset(rect, !(rect == "43F0" & RFA == "1"))
+
+rect_mis <- data.frame(rect = "40E6", spr_div = "IV", RFA = "4")
+
+rect <- bind_rows(rect, rect_mis)
+```
+
+# Recode areas
+```{r}
+
+rect$RFA[rect$rect == "44F6"] <- NA
+
+div_4 <- subset(rect, spr_div == "IV")
+div_4_na <- subset(div_4, is.na(RFA))
+div_4_na$rect
+
+rect$RFA[rect$rect == "32F0"] <- "5"
+rect$RFA[rect$rect == "33F5"] <- "6"
+rect$RFA[rect$rect == "34F0"] <- "5"
+rect$RFA[rect$rect == "34F5"] <- "6"
+rect$RFA[rect$rect == "35F6"] <- "6"
+rect$RFA[rect$rect == "35F7"] <- "6"
+rect$RFA[rect$rect == "36E9"] <- "4"
+rect$RFA[rect$rect == "36F9"] <- "6"
+rect$RFA[rect$rect == "40E7"] <- "4"
+rect$RFA[rect$rect == "40F8"] <- "7"
+rect$RFA[rect$rect == "41E6"] <- "3"
+rect$RFA[rect$rect == "41F8"] <- "7"
+rect$RFA[rect$rect == "42F8"] <- "7"
+rect$RFA[rect$rect == "43E7"] <- "3"
+rect$RFA[rect$rect == "50E6"] <- "1"
+rect$RFA[rect$rect == "51E6"] <- "1"
+rect$RFA[rect$rect == "51E7"] <- "1"
+rect$RFA[rect$rect == "51F3"] <- "1"
+rect$RFA[rect$rect == "52E6"] <- "1"
+rect$RFA[rect$rect == "52E7"] <- "1"
+rect$RFA[rect$rect == "52E8"] <- "1"
+rect$RFA[rect$rect == "52F2"] <- "1"
+rect$RFA[rect$rect == "52F3"] <- "1"
+
+div_no <- subset(rect, spr_div == "NO")
+div_no$rect
+
+rect$spr_div[rect$rect %in% c("45F7", "45F8", "46F8", "46F9", "47F9", "46G0", 
+                            "47G0", "48G0", "47G1")] <- "NO"
+
+div_out <- subset(rect, spr_div == "OUT")
+div_out$rect
+
+rect$RFA[rect$rect == "31F0"] <- "5"
+rect$spr_div[rect$rect == "31F0"] <- "IV"
+rect$RFA[rect$rect == "32F4"] <- "6"
+rect$spr_div[rect$rect == "32F4"] <- "IV"
+rect$RFA[rect$rect == "42F9"] <- "7"
+rect$spr_div[rect$rect == "42F9"] <- "IV"
+
+div_na <- subset(rect, is.na(spr_div))
+div_na$rect
+
+rect$RFA[rect$rect == "31F4"] <- "6"
+rect$spr_div[rect$rect == "31F4"] <- "IV"
+rect$RFA[rect$rect == "35F8"] <- "6"
+rect$spr_div[rect$rect == "35F8"] <- "IV"
+rect$RFA[rect$rect == "44E5"] <- "3"
+rect$spr_div[rect$rect == "44E5"] <- "IV"
+
+rect$spr_div[is.na(rect$spr_div) & rect$RFA == 10] <- "OUT"
+rect$spr_div[is.na(rect$spr_div) & is.na(rect$RFA)] <- "OUT"
+
+```
+
+
+# Plot RFA alike areas
+```{r}
+areas_map <- left_join(rect, square, by = c("rect" = "ICESNAME"))
+areas_map <- st_as_sf(areas_map)
+area_codes <- unique(rect$RFA)
+names(col_area) <- area_codes
+
+ggplot() +
+  geom_sf(data=areas_map, aes(fill=RFA)) +
+  scale_fill_manual(values = col_area, name = "RFA", na.value = "green") +
+  geom_sf(data = country, aes()) + 
+  coord_sf(xlim= c(-5, 15), ylim=c(49,62)) 
+# +
+#   theme(legend.position="bottom") + labs(title = "RFA")
+```
+
+# Plot spr div
+```{r}
+areas_map <- left_join(rect, square, by = c("rect" = "ICESNAME"))
+areas_map <- st_as_sf(areas_map)
+area_codes <- unique(rect$spr_div)
+col_area_1 <- c("#1170aa", "green", "yellow", "magenta")
+names(col_area_1) <- area_codes
+
+ggplot() +
+  geom_sf(data=areas_map, aes(fill=spr_div)) +
+  scale_fill_manual(values = col_area_1, name = "RFA", na.value = "red") +
+  geom_sf(data = country, aes()) + 
+  coord_sf(xlim= c(-5, 15), ylim=c(49,62)) 
+# +
+#   theme(legend.position="bottom") + labs(title = "RFA")
+```
+
+# Fix other areas
+
+# Check and output
+```{r}
+count <- summarise(group_by(rect, Area), no_square = length(unique(rect)))
+count <- summarise(group_by(rect, area2), no_square = length(unique(rect)))
+
+nrow(rect)
+length(unique(rect$rect))
+rect <- mutate(group_by(rect, rect), no = length(rect))
+
+rect <- distinct(rect, rect, RFA, spr_div)
+```
+
+```{r}
+write.table(rect, paste0(path_data, "sprat_area_relation.csv"), sep = ",",
+            row.names = F, na = "")
+```
+
