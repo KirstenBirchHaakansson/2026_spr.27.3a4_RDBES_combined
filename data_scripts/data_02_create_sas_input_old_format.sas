@@ -110,8 +110,8 @@ group by year;
 
 *Landings per square;
 
-PROC IMPORT OUT= out.catch_square_2002_2025
-            DATAFILE= "&path.\catches_square_2002_2025.csv" 
+PROC IMPORT OUT= out.catch_square_2002_2026
+            DATAFILE= "&path.\catches_square_2002_2026.csv" 
             DBMS=CSV REPLACE;
      GETNAMES=YES;
      DATAROW=2; 
