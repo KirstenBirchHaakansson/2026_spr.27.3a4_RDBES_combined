@@ -5,11 +5,17 @@ library(lubridate)
 library(dplyr)
 library(stringr)
 
-mkdir("data")
-
-years <- c(2024:2026)
+options(scipen = 999)
 
 
+# File names ----
+
+# File names of old time series that need to be updated - find then in 
+
+path_old_files <- "./boot/data/data_from_bm/"
+file_name_old_div <- "catches_div_2019_2025"
+
+# File names of new data - find them at ./boot/data
 bel_file <- "BE_2026 DC HAWG spr.27.4 BEL landings.xls"
 deu_file <- "DE_2026 DC HAWG spr.27.4 DE landings.xls"
 sco_file <-
@@ -75,7 +81,7 @@ cat_div <-
     nld_cat_div,
     eng_cat_div
   )
-cat_div_1 <- subset(cat_div, Year %in% years)
+cat_div_1 <- subset(cat_div, Year != 2015) # There are example data from 2015 that not all countries delete
 
 ## correct naming of subdivision
 unique(cat_div_1$Subarea)
@@ -99,7 +105,7 @@ unique(cat_div_1$Subarea)
 names(cat_div_1) <- tolower(names(cat_div_1))
 
 write.csv(cat_div_1,
-          paste0("data/", "catches_div_", min(years), "_", max(years), ".csv"),
+          paste0("data/", "catches_div_", min(unique(cat_div_1$year)), "_", max(unique(cat_div_1$year)), ".csv"),
           row.names = F)
 
 # Check figures against submissions
@@ -108,25 +114,28 @@ write.csv(cat_div_1,
 old_div <-
   read.csv(
     paste0(
-      "boot/data/data_from_bm/",
-      "catches_div_2019_2025.csv"
+      path_old_files,
+      file_name_old_div,
+      ".csv"
     ),
     sep = ","
   )
+
 names(old_div) <- tolower(names(old_div))
 unique(old_div$year)
 
-distinct(cat_div_1, country, year) 
-distinct(old_div, country, year)
+cat_div_1 <- rename(cat_div_1, catch_in_ton_new = catch_in_ton)
 
-old_div_1 <-
-  subset(old_div,!(country %in% c("DK", "GB-SCT") & year %in% c(2024, 2025)))
-distinct(old_div_1, country, year)
+old_new_div_merge <- full_join(old_div, cat_div_1)
+old_new_div_merge_tjek <- subset(old_new_div_merge, !(is.na(catch_in_ton_new)))
 
-new_div <- rbind(old_div_1, cat_div_1)
+old_new_div_merge_tjek$diff <- old_new_div_merge_tjek$catch_in_ton_new - old_new_div_merge_tjek$catch_in_ton
 
-write.csv(new_div,
-          paste0("data/", "catches_div_2019_", max(years), ".csv"),
+old_new_div_merge$catch_in_ton[!(is.na(old_new_div_merge$catch_in_ton_new))] <- 
+  old_new_div_merge$catch_in_ton_new[!(is.na(old_new_div_merge$catch_in_ton_new))]
+
+write.csv(old_new_div_merge,
+          paste0("data/", "catches_div_2019_", max(unique(old_new_div_merge$year)), ".csv"),
           row.names = F)
 
 
@@ -182,7 +191,7 @@ cat_sq <-
     dnk_cat_sq,
     eng_cat_sq
   )
-cat_sq_1 <- subset(cat_sq, Year %in% years)
+cat_sq_1 <- subset(cat_sq, Year != 2015) # There are example data from 2015 that not all countries delete
 
 head(cat_sq_1)
 
@@ -197,7 +206,7 @@ unique(cat_sq_1$Square)
 names(cat_sq_1) <- tolower(names(cat_sq_1))
 
 write.csv(cat_sq_1,
-          paste0("data/", "catches_square_", min(years), "_", max(years), ".csv"),
+          paste0("data/", "catches_square_", min(unique(cat_sq_1$year)), "_", max(unique(cat_sq_1$year)), ".csv"),
           row.names = F)
 
 ## combine new data with old
@@ -213,17 +222,18 @@ old_sq <-
 names(old_sq) <- tolower(names(old_sq))
 unique(old_sq$year)
 
-distinct(cat_sq_1, country, year) # Only Danish data from 2023 and 2025
-distinct(old_sq, country, year)
+cat_sq_1 <- rename(cat_sq_1, catch_in_ton_new = catch_in_ton)
 
-old_sq_1 <-
-  subset(old_sq,!(country == "DK" & year %in% c(2024, 2025)))
-distinct(old_sq_1, country, year)
+old_new_sq_merge <- full_join(old_sq, cat_sq_1)
+old_new_sq_merge_tjek <- subset(old_new_sq_merge, !(is.na(catch_in_ton_new)))
 
-new_sq <- rbind(old_sq_1, cat_sq_1)
+old_new_sq_merge_tjek$diff <- old_new_sq_merge_tjek$catch_in_ton_new - old_new_sq_merge_tjek$catch_in_ton
 
-write.csv(new_sq,
-          paste0("data/", "catches_square_2002_", max(years), ".csv"),
+old_new_sq_merge$catch_in_ton[!(is.na(old_new_sq_merge$catch_in_ton_new))] <- 
+  old_new_sq_merge$catch_in_ton_new[!(is.na(old_new_sq_merge$catch_in_ton_new))]
+
+write.csv(old_new_sq_merge,
+          paste0("data/", "catches_square_2019_", max(unique(old_new_sq_merge$year)), ".csv"),
           row.names = F)
 
 # samples ALK ----
@@ -261,7 +271,7 @@ samp_alk <-
     quarter = quarter(Date)
   )
 
-samp_alk_1 <- subset(samp_alk, year %in% years)
+samp_alk_1 <- subset(samp_alk, year != 2015) # There are example data from 2015 that not all countries delete
 
 unique(samp_alk_1$length_mm)
 
@@ -270,7 +280,7 @@ names(samp_alk_1)
 samp_alk_1 <- rename(samp_alk_1, c("noage4" = "noage4+"))
 
 write.csv(samp_alk_1,
-          paste0("data/", "alk_samples_", min(years), "_", max(years), ".csv"),
+          paste0("data/", "alk_samples_", min(unique(samp_alk_1$year)), "_", max(unique(samp_alk_1$year)), ".csv"),
           row.names = F)
 
 ## Output to Anna's script
@@ -281,7 +291,7 @@ samp_alk_a_1 <- subset(samp_alk_a, country != "DK")
 
 write.csv(
   samp_alk_a_1,
-  paste0("data/", "alk_samples_original_format_no_dnk_", min(years), "_", max(years), ".csv"),
+  paste0("data/", "alk_samples_original_format_no_dnk_", min(unique(samp_alk_1$year)), "_", max(unique(samp_alk_1$year)), ".csv"),
   row.names = F,
   na = ""
 )
@@ -327,14 +337,14 @@ samp_ld <-
     quarter = quarter(Date)
   )
 
-samp_ld_1 <- subset(samp_ld, year %in% years)
+samp_ld_1 <- subset(samp_ld, year != 2015) # There are example data from 2015 that not all countries delete
 
 unique(samp_ld_1$length_mm)
 
 names(samp_ld_1) <- tolower(names(samp_ld_1))
 
 write.csv(samp_ld_1,
-          paste0("data/", "ld_samples_", min(years), "_", max(years), ".csv"),
+          paste0("data/", "ld_samples_", min(unique(samp_ld_1$year)), "_", max(unique(samp_ld_1$year)), ".csv"),
           row.names = F)
 
 ## Output to Anna's script
@@ -344,7 +354,7 @@ samp_ld_a_1 <- subset(samp_ld_1, country != "DK")
 
 write.csv(
   samp_ld_a_1,
-  paste0("data/", "ld_samples_original_format_no_dnk_", min(years), "_", max(years), ".csv"),
+  paste0("data/", "ld_samples_original_format_no_dnk_", min(unique(samp_ld_1$year)), "_", max(unique(samp_ld_1$year)), ".csv"),
   row.names = F
 )
 
@@ -368,7 +378,7 @@ names(nor_samp)
 samp <- rbind(swe_samp, dnk_samp, nor_samp)
 head(samp)
 
-samp_1 <- subset(samp, Year %in% years)
+samp_1 <- subset(samp, Year != 2015) # There are example data from 2015 that not all countries delete
 
 ## correct naming of subdivision
 unique(samp_1$Subarea)
@@ -390,5 +400,5 @@ unique(samp_1$Subarea)
 names(samp_1) <- tolower(names(samp_1))
 
 write.csv(samp_1,
-          paste0("data/", "no_samples_", min(years), "_", max(years), ".csv"),
+          paste0("data/", "no_samples_", min(unique(samp_1$year)), "_", max(unique(samp_1$year)), ".csv"),
           row.names = F)
