@@ -291,7 +291,7 @@ samp_alk_a_1 <- subset(samp_alk_a, country != "DK")
 
 write.csv(
   samp_alk_a_1,
-  paste0("data/", "alk_samples_original_format_no_dnk_", min(unique(samp_alk_1$year)), "_", max(unique(samp_alk_1$year)), ".csv"),
+  paste0("data/", "alk_samples_original_format_no_dnk_", min(unique(samp_alk_a_1$year)), "_", max(unique(samp_alk_a_1$year)), ".csv"),
   row.names = F,
   na = ""
 )
@@ -354,7 +354,7 @@ samp_ld_a_1 <- subset(samp_ld_1, country != "DK")
 
 write.csv(
   samp_ld_a_1,
-  paste0("data/", "ld_samples_original_format_no_dnk_", min(unique(samp_ld_1$year)), "_", max(unique(samp_ld_1$year)), ".csv"),
+  paste0("data/", "ld_samples_original_format_no_dnk_", min(unique(samp_ld_a_1$year)), "_", max(unique(samp_ld_a_1$year)), ".csv"),
   row.names = F
 )
 
