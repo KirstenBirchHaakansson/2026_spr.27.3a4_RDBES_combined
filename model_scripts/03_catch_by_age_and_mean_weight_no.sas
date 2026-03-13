@@ -1,11 +1,17 @@
 /**/
 
-libname in 'C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\gits\spr.27.3a4_commercial_catch\data\03_assessement_2025';
-libname out 'C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\gits\spr.27.3a4_commercial_catch\output\30_29_with_mw_on_0_n';
+%let update = 'partial'; *all|partial;
+%let years_to_update_first = 2024;
+%let years_to_update_last = 2026;
+%let year = 2025;
 
-%let path_output = C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\gits\spr.27.3a4_commercial_catch\output\30_29_with_mw_on_0_n;
+libname in 'C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\stock_coord_work\spr.27.3a4\2026_spr.27.3a4_RDBES_combined\data';
+libname out 'C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\stock_coord_work\spr.27.3a4\2026_spr.27.3a4_RDBES_combined\model';
 
-%let path_area = C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\gits\spr.27.3a4_commercial_catch\utils\area_relation;
+%let path_area = C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\stock_coord_work\spr.27.3a4\2026_spr.27.3a4_RDBES_combined\utils\area_relation;
+%let path_output = C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\stock_coord_work\spr.27.3a4\2026_spr.27.3a4_RDBES_combined\model;
+%let path_other = C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\stock_coord_work\spr.27.3a4\2026_spr.27.3a4_RDBES_combined\boot\data\other;
+
 
 PROC IMPORT OUT= WORK.area_relation
             DATAFILE= "&path_area./sprat_area_relation.csv" 
@@ -16,9 +22,7 @@ PROC IMPORT OUT= WORK.area_relation
 RUN;
 
 PROC IMPORT OUT= WORK.swe_swe_coast 
-            DATAFILE= "C:\Users\kibi\OneDrive - Danmarks Tekniske Univer
-sitet\gits\spr.27.3a4_commercial_catch\data\08_swedish_coast\catch_SWE_s
-pr.27.3aN_coastal_78-24.txt" 
+            DATAFILE= "&path_other.\catch_SWE_spr.27.3aN_coastal_78-24.txt" 
             DBMS=TAB REPLACE;
      GETNAMES=YES;
      DATAROW=2; 
