@@ -156,11 +156,6 @@ intsq='    ';
 intsq=square;
 ton=catch_in_ton;
 if country in ('DEN','DK') and year lt 2019 then delete;
-****************REMOVE IN 2024************************;
-****************Temporary fix for low catches and no samples**********;
-*if year=2025 and quarter=1 then do;
-*	quarter=4; *year=2024;
-*	end;
 run;
 
 ** Add areas;
@@ -374,7 +369,7 @@ run;
 
 proc sql;
 create table area_check_2 as
-select distinct rfa, spr_div, div
+select distinct rfa, div
 from a2d;
 
 
@@ -388,25 +383,8 @@ by year div;
 output out=t4 (drop=_type_ _freq_) sum()=;
 run;
 
-data t5;
-set in.sms_ns_2011;
-if species ne 'Sprat' then delete;
-sms_ton=yield__sop_;
-if year gt 1964 then delete;
-run;
-
-proc sort data=t5;
-by year;
-run;
-
-proc summary data=t5;
-var sms_ton;
-by year;
-output out=t6 (drop=_type_ _freq_) sum()=IV;
-run;
-
 data t7a;
-set t6 in.ices_catch;
+set in.ices_catch;
 if year lt 1965 then IV=IV/1000;
 if year ge 1966 then IV=IV+IIIa;
 run;
@@ -445,9 +423,11 @@ if year=2022 then IV=89.721+0.384; *OK;
 
 if year=2023 then IV=91.420+3.237848; *2025 - updated and only 2023 landings;
 
-if year=2024 then IV=84.970 + 0.002; *2025 - updated 2024+2025 landings;
+if year=2024 then IV=84.9698401; *2026;
 
-if year=2025 then IV=0; *2025 run - moved to Q4 2024;
+if year=2025 then IV=211.809566; *2026;
+
+if year=2026 then IV=0.010525; *2026;
 
 ****************REMOVE 683 t from 2019 IN 2021************************;
 ****************Temporary fix for low catches and no samples**********;
@@ -516,7 +496,7 @@ run;
 
 proc sql;
 create table area_check_3 as
-select distinct rfa, spr_div, area3
+select distinct rfa, spr_div
 from cb9;
 
 data cb10;
@@ -601,7 +581,7 @@ run;
 
 data m15a;
 set m14;
-do year=1974 to 2025 by 1;
+do year=1974 to &years_to_update_last. by 1;
 output;
 end;
 run;
@@ -705,6 +685,7 @@ proc gplot data=m20;
 plot (n0_per_ton n1_per_ton n2_per_ton n3_per_ton n4_per_ton)*year=div;
 by quarter;
 run;
+
 
 *****************In 1985, there are no 3-year olds observed, in 1986 there are no samples*************;
 ****************Before 1974, there are no samples and SMS data are used*******************************;
