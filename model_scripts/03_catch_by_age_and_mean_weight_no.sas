@@ -10,7 +10,7 @@ libname out 'C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\stock_coord_
 
 %let path_area = C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\stock_coord_work\spr.27.3a4\2026_spr.27.3a4_RDBES_combined\utils\area_relation;
 %let path_output = C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\stock_coord_work\spr.27.3a4\2026_spr.27.3a4_RDBES_combined\model;
-%let path_other = C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\stock_coord_work\spr.27.3a4\2026_spr.27.3a4_RDBES_combined\boot\data\other;
+%let path_coast = C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\stock_coord_work\spr.27.3a4\2026_spr.27.3a4_RDBES_combined\boot\data\swedish_coastal;
 
 
 %let new_mw_no_file_name = mean_weight_and_n_per_kg_&year.;
@@ -24,7 +24,7 @@ PROC IMPORT OUT= WORK.area_relation
 RUN;
 
 PROC IMPORT OUT= WORK.swe_swe_coast 
-            DATAFILE= "&path_other.\catch_SWE_spr.27.3aN_coastal_78-24.txt" 
+            DATAFILE= "&path_coast.\catch_SWE_spr.27.3aN_coastal_78-24.txt" 
             DBMS=TAB REPLACE;
      GETNAMES=YES;
      DATAROW=2; 
@@ -151,16 +151,16 @@ run;
 quit;
 
 data a2b;
-set in.catch_square_2002_&year.;
+set in.catch_square_2002_&years_to_update_last.;
 intsq='    ';
 intsq=square;
 ton=catch_in_ton;
 if country in ('DEN','DK') and year lt 2019 then delete;
 ****************REMOVE IN 2024************************;
 ****************Temporary fix for low catches and no samples**********;
-if year=2025 and quarter=1 then do;
-	quarter=4; year=2024;
-	end;
+*if year=2025 and quarter=1 then do;
+*	quarter=4; *year=2024;
+*	end;
 run;
 
 ** Add areas;
@@ -204,9 +204,60 @@ proc sort data=a2;
 by year quarter intsq;
 run;
 
-proc sort data=out.mean_weight_and_n_per_kg_bench out=a3;
+proc sort data=out.&new_mw_no_file_name. out=a3;
 by year quarter intsq;
 run;
+
+*************260313 - impute missing biology 2025 & 2026 ****************************;
+data a3_imp;
+set a3;
+
+if year in (2024, 2025) and quarter = 4 then do;
+	year = year + 1;
+	quarter = 1;
+	n4_per_kg = (n3_per_kg + n4_per_kg) / 2;
+	n3_per_kg = n2_per_kg;
+	n2_per_kg = n1_per_kg;
+	n1_per_kg = n0_per_kg;
+	n0_per_kg = 0;
+	mw4 = (mw3 + mw4) / 2;
+	mw3 = mw2;
+	mw2 = mw1;
+	mw1 = mw0;
+	mw0 = .;
+	imputation = 'yes';
+end;
+
+if imputation ne 'yes' then delete;
+run;
+
+data a3_imp;
+set a3_imp;
+
+output; 
+
+if year = 2025 and quarter = 1 and intsq = '42F8' then do;
+	intsq = '42F9'; *Why is this one missing?;
+	output;
+end;
+
+run;
+
+data a3; 
+set a3; 
+if year in (2025, 2026) and quarter = 1 then delete;
+
+run;
+
+data a3;
+set a3 a3_imp;
+run;
+
+proc sort data=a3;
+by year quarter intsq;
+run;
+
+***********************************************************************************;
 
 data a4;
 merge a2 a3;
@@ -218,13 +269,21 @@ set a4;
 
 if level = .;
 
+drop spr_div;
+
 run;
 
 proc sql;
+create table a4_miss_bio_2 as
+select *
+from a4_miss_bio a left join area_relation b
+on a.intsq = b.rect;
+
+proc sql;
 create table a4_miss_bio_sum as
-select year, intsq, sum(ton) as ton
-from a4_miss_bio
-group by year, intsq;
+select year, quarter, spr_div, intsq, sum(ton) as ton
+from a4_miss_bio_2
+group by year, quarter, spr_div, intsq;
 
 *proc sort data=a4 out=x4;
 *by quarter year;
