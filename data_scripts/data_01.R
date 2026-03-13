@@ -75,7 +75,7 @@ cat_div <-
     nld_cat_div,
     eng_cat_div
   )
-cat_div_1 <- subset(cat_div, Year %in% c(2024, 2025, 2026))
+cat_div_1 <- subset(cat_div, Year %in% years)
 
 ## correct naming of subdivision
 unique(cat_div_1$Subarea)
@@ -99,7 +99,7 @@ unique(cat_div_1$Subarea)
 names(cat_div_1) <- tolower(names(cat_div_1))
 
 write.csv(cat_div_1,
-          paste0("data/", "catches_div_2024_2026.csv"),
+          paste0("data/", "catches_div_", min(years), "_", max(years), ".csv"),
           row.names = F)
 
 # Check figures against submissions
@@ -108,25 +108,25 @@ write.csv(cat_div_1,
 old_div <-
   read.csv(
     paste0(
-      "boot/data/data_from_last_year/",
-      "catches_div_2019_2024.csv"
+      "boot/data/data_from_bm/",
+      "catches_div_2019_2025.csv"
     ),
-    sep = ";"
+    sep = ","
   )
 names(old_div) <- tolower(names(old_div))
 unique(old_div$year)
 
-distinct(cat_div_1, country, year) # Only Danish data from 2023 and 2025
+distinct(cat_div_1, country, year) 
 distinct(old_div, country, year)
 
 old_div_1 <-
-  subset(old_div,!(country == "DK" & year %in% c(2023, 2024)))
+  subset(old_div,!(country %in% c("DK", "GB-SCT") & year %in% c(2024, 2025)))
 distinct(old_div_1, country, year)
 
 new_div <- rbind(old_div_1, cat_div_1)
 
 write.csv(new_div,
-          paste0("data/", "catches_div_2019_2025.csv"),
+          paste0("data/", "catches_div_2019_", max(years), ".csv"),
           row.names = F)
 
 
@@ -182,7 +182,7 @@ cat_sq <-
     dnk_cat_sq,
     eng_cat_sq
   )
-cat_sq_1 <- subset(cat_sq, Year %in% c(2023, 2024, 2025))
+cat_sq_1 <- subset(cat_sq, Year %in% years)
 
 head(cat_sq_1)
 
@@ -197,7 +197,7 @@ unique(cat_sq_1$Square)
 names(cat_sq_1) <- tolower(names(cat_sq_1))
 
 write.csv(cat_sq_1,
-          paste0("data/", "catches_square_2023_2025.csv"),
+          paste0("data/", "catches_square_", min(years), "_", max(years), ".csv"),
           row.names = F)
 
 ## combine new data with old
@@ -205,8 +205,8 @@ write.csv(cat_sq_1,
 old_sq <-
   read.csv(
     paste0(
-      "boot/data/data_from_last_year/",
-      "catches_square_2002_2024.csv"
+      "boot/data/data_from_bm/",
+      "catches_square_2002_2025.csv"
     ),
     sep = ","
   )
@@ -217,13 +217,13 @@ distinct(cat_sq_1, country, year) # Only Danish data from 2023 and 2025
 distinct(old_sq, country, year)
 
 old_sq_1 <-
-  subset(old_sq,!(country == "DK" & year %in% c(2023, 2024)))
+  subset(old_sq,!(country == "DK" & year %in% c(2024, 2025)))
 distinct(old_sq_1, country, year)
 
 new_sq <- rbind(old_sq_1, cat_sq_1)
 
 write.csv(new_sq,
-          paste0("data/", "catches_square_2002_2025.csv"),
+          paste0("data/", "catches_square_2002_", max(years), ".csv"),
           row.names = F)
 
 # samples ALK ----
@@ -390,5 +390,5 @@ unique(samp_1$Subarea)
 names(samp_1) <- tolower(names(samp_1))
 
 write.csv(samp_1,
-          paste0("data/", "no_samples", min(years), "_", max(years), ".csv"),
+          paste0("data/", "no_samples_", min(years), "_", max(years), ".csv"),
           row.names = F)
