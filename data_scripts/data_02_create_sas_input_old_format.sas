@@ -10,7 +10,7 @@ libname out "C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\stock_coord_
 *ALK;
 
 PROC IMPORT OUT= WORK.alk
-            DATAFILE= "&path.\alk_samples_original_format_no_dnk_2024_2026.csv" 
+            DATAFILE= "&path.\alk_samples_original_format_no_dnk_2025_2025.csv" 
             DBMS=CSV REPLACE;
      GETNAMES=YES;
      DATAROW=2; 
@@ -60,7 +60,7 @@ group by year;
 *LD;
 
 PROC IMPORT OUT = work.ld
-            DATAFILE= "&path.\ld_samples_original_format_no_dnk_2024_2026.csv" 
+            DATAFILE= "&path.\ld_samples_original_format_no_dnk_2025_2025.csv" 
             DBMS=CSV REPLACE;
      GETNAMES=YES;
      DATAROW=2; 
