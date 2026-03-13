@@ -429,8 +429,6 @@ if year=2025 then IV=211.809566; *2026;
 
 if year=2026 then IV=0.010525; *2026;
 
-****************REMOVE 683 t from 2019 IN 2021************************;
-****************Temporary fix for low catches and no samples**********;
 run;
 
 proc sort data = t8a;
@@ -686,92 +684,6 @@ plot (n0_per_ton n1_per_ton n2_per_ton n3_per_ton n4_per_ton)*year=div;
 by quarter;
 run;
 
-
-*****************In 1985, there are no 3-year olds observed, in 1986 there are no samples*************;
-****************Before 1974, there are no samples and SMS data are used*******************************;
-
-data s1;
-set in.sms_ns_2011;
-if species ne 'Sprat' then delete;
-sms_ton=yield__sop_;
-sms_per_ton=c/sms_ton;
-if quarter ne 3 then delete;
-if age=0 then smsn0=c;
-if age=1 then smsn1=c;
-if age=2 then smsn2=c;
-if age=3 then smsn3=0.91*c;
-if age=3 then smsn4=0.09*c;
-if age=0 then smsw0=weca;
-if age=1 then smsw1=weca;
-if age=2 then smsw2=weca;
-if age=3 then smsw3=weca;
-if age=3 then smsw4=weca;
-run;
-
-proc sort data=s1;
-by year;
-run;
-
-proc summary data=s1;
-var smsn0-smsn4 smsw0-smsw4;
-by year;
-output out=s2 (drop=_type_ _freq_) sum()=;
-run;
-
-proc summary data=s1;
-var sms_ton;
-by year ;
-output out=s3 (drop=_type_ _freq_) sum()=;
-run;
-
-proc sort data=m20;
-by year;
-run;
-
-data s4;
- merge m20 s2 s3;
- by year;
- run;
-
-data s5;
-set s4;
-*if year in (1963,1964,1965,1966,1967,1968,1969,1970,1971,1972,1973,1985,1986) and div='IV' then id=1;
-if id=1 then mw0=smsw0;
-if id=1 then mw1=smsw1;
-if id=1 then mw2=smsw2;
-if id=1 then mw3=smsw3;
-if id=1 then mw4=smsw4;
-if id=1 and quarter ne 4 then n0=0;
-if id=1 and quarter=4 then n0=smsn0;
-if id=1 then n1=ton*smsn1/(sms_ton-mw0*n0);
-if id=1 then n2=ton*smsn2/(sms_ton-mw0*n0);
-if id=1 then n3=ton*smsn3/(sms_ton-mw0*n0);
-if id=1 then n4=ton*smsn4/(sms_ton-mw0*n0);
-if id=1 and quarter=4 then n1=(ton-smsn0*mw0)*smsn1/(sms_ton-mw0*n0);
-if id=1 and quarter=4 then n2=(ton-smsn0*mw0)*smsn2/(sms_ton-mw0*n0);
-if id=1 and quarter=4 then n3=(ton-smsn0*mw0)*smsn3/(sms_ton-mw0*n0);
-if id=1 and quarter=4 then n4=(ton-smsn0*mw0)*smsn4/(sms_ton-mw0*n0);
-run;
-
-proc sort data=s4;
-by quarter;
-run;
-
-proc gplot data=s4;
-plot mw2*smsw2=quarter;
-*by quarter;
-run;
-
-
-*proc sort data=s5;
-*by year quarter;
-*run;
-
-*proc summary data=s5;
-*var n0-n4;
-*by year;
-*output out=s6 sum()=;
-*run;
 /*
 **************Adding final year q1 catches*******************;
 
@@ -1014,7 +926,7 @@ quit;
 
 */
 data m26;
-set s5;
+set m20;
 if quarter in (1,2) then sopcorr=ton/(n1*mw1+n2*mw2+n3*mw3+n4*mw4);
 if quarter in (3,4) then sopcorr=ton/(n0*mw0+n1*mw1+n2*mw2+n3*mw3+n4*mw4);
 if ton=0 then sopcorr=1;
@@ -1070,10 +982,10 @@ run;
 
 data m28;
 set m27;
-if year lt 2026 then mw0=wmw0/n0;
-if year lt 2026 then mw1=wmw1/n1;
-if year lt 2026 then mw2=wmw2/n2;
-if year lt 2026 then mw3=wmw3/n3;
+if year le &years_to_update_last. then mw0=wmw0/n0;
+if year le &years_to_update_last.  then mw1=wmw1/n1;
+if year le &years_to_update_last.  then mw2=wmw2/n2;
+if year le &years_to_update_last.  then mw3=wmw3/n3;
 if quarter in (1,2) then  mw0=wmw0/n0;
 if quarter in (1,2) then  mw1=wmw1/n1;
 if quarter in (1,2) then  mw2=wmw2/n2;
@@ -1153,20 +1065,7 @@ if year lt 1974 then delete;
 run;
 
 proc export data=miv
-   outfile= "&path_output\canum_weca_jul_jun_season_IV_with_Q2_no_SMS_no_SEcoast_v30.csv"
-   dbms=csv 
-   replace;
-run;
-quit;
-
-data miiia;
-set m31;
-if div ne 'NO' then delete;
-if year lt 1974 then delete;
-run;
-
-proc export data=miiia
-   outfile= "&path_output\canum_weca_jul_jun_season_NO_with_Q2_no_SMS_no_SEcoast_v30.csv"
+   outfile= "&path_output\canum_weca_jul_jun_season_IV_&year..csv"
    dbms=csv 
    replace;
 run;
@@ -1234,7 +1133,7 @@ drop mmw0-mmw3 t0-t3 _TYPE_ _FREQ_;
 run;
 
 proc export data=hy5
-   outfile= "&path_output\canum_weca_jul_jun_halfyear_IV_with_Q2_no_SMS_no_SEcoast_v30.csv"
+   outfile= "&path_output\canum_weca_jul_jun_halfyear_IV_&year..csv"
    dbms=csv 
    replace;
 run;
@@ -1257,7 +1156,7 @@ keep div year hy n_samples n0_prop n1_prop n2_prop n3_prop n_tot ton check_prop;
 run;
 
 proc export data=hy6 (drop = check_prop)
-   outfile= "&path_output\no_prop_jul_jun_halfyear_IV_with_Q2_no_SMS_no_SEcoast_v30.csv"
+   outfile= "&path_output\no_prop_jul_jun_halfyear_IV_&year..csv"
    dbms=csv 
    replace;
 run;
@@ -1301,7 +1200,7 @@ drop mmw0-mmw3 t0-t3 _TYPE_ _FREQ_;
 run;
 
 proc export data=year2
-   outfile= "&path_output\canum_weca_jul_jun_year_IV_with_Q2_no_SMS_no_SEcoast_v30.csv"
+   outfile= "&path_output\canum_weca_jul_jun_year_IV_&year..csv"
    dbms=csv 
    replace;
 run;
