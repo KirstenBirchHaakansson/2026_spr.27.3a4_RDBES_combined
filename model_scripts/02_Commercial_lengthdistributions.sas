@@ -11,6 +11,7 @@ libname out 'C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\stock_coord_
 %let path_area = C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\stock_coord_work\spr.27.3a4\2026_spr.27.3a4_RDBES_combined\utils\area_relation;
 
 %let new_alk_file_name = alk_intsq_&year.;
+%let old_mw_no_file_name = mean_weight_and_n_per_kg_bench;
 
 PROC IMPORT OUT= WORK.area_relation
             DATAFILE= "&path_area./sprat_area_relation.csv" 
@@ -1091,7 +1092,7 @@ run;
 
 ***************20260312 Included after BM 2025***************;
 data m17a;
-set in.mean_weight_and_n_per_kg_bench;
+set in.&old_mw_no_file_name.;
 if year ge &years_to_update_first. then delete;
 run;
 ************************************************************;
