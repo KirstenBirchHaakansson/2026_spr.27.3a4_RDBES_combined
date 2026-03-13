@@ -13,6 +13,8 @@ libname out 'C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\stock_coord_
 %let path_other = C:\Users\kibi\OneDrive - Danmarks Tekniske Universitet\stock_coord_work\spr.27.3a4\2026_spr.27.3a4_RDBES_combined\boot\data\other;
 
 
+%let new_mw_no_file_name = mean_weight_and_n_per_kg_&year.;
+
 PROC IMPORT OUT= WORK.area_relation
             DATAFILE= "&path_area./sprat_area_relation.csv" 
             DBMS=CSV REPLACE;
@@ -149,7 +151,7 @@ run;
 quit;
 
 data a2b;
-set in.catch_square_2002_2025;
+set in.catch_square_2002_&year.;
 intsq='    ';
 intsq=square;
 ton=catch_in_ton;
