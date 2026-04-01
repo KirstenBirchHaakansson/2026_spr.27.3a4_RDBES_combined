@@ -131,17 +131,27 @@ dat_new_2 <- subset(dat_new_1, subarea %in% c("27.3.a.20", "27.3.a.21",
 
 dat_new_2 <- rename(dat_new_2, area = subarea, ctry = country)
 
-dat_new_sum <- summarise(group_by(dat_new_2, year, ctry, area), catch_1000t = round(sum(catch_in_ton/1000), digits = 1))
+dat_new_sum <- summarise(group_by(dat_new_2, year, ctry, area), catch_1000t = sum(catch_in_ton/1000))
+dat_new_sum$catch_1000t[dat_new_sum$catch_1000t <= 0.049] <- NA
+dat_new_sum$catch_1000t <- round(dat_new_sum$catch_1000t, digits = 1)
+dat_new_sum$catch_1000t[is.na(dat_new_sum$catch_1000t)] <- 0.049
 
 ## Add totals ----
 
-tot_year_area <- summarise(group_by(dat_new_2, year, area), catch_1000t = round(sum(catch_in_ton/1000), digits = 1))
-tot_year_area$ctry <- "Total"
-tot_year <- summarise(group_by(dat_new_2, year), catch_1000t = round(sum(catch_in_ton/1000), digits = 1))
+tot_year_ctry <- summarise(group_by(dat_new_2, year, ctry), catch_1000t = sum(catch_in_ton/1000))
+tot_year_ctry$area <- "Total"
+tot_year_ctry$catch_1000t[tot_year_ctry$catch_1000t <= 0.049] <- NA
+tot_year_ctry$catch_1000t <- round(tot_year_ctry$catch_1000t, digits = 1)
+tot_year_ctry$catch_1000t[is.na(tot_year_ctry$catch_1000t)] <- 0.049
+
+tot_year <- summarise(group_by(dat_new_2, year), catch_1000t = sum(catch_in_ton/1000))
 tot_year$ctry <- "Total"
 tot_year$area <- "Total"
+tot_year$catch_1000t[tot_year$catch_1000t <= 0.049] <- NA
+tot_year$catch_1000t <- round(tot_year$catch_1000t, digits = 1)
+tot_year$catch_1000t[is.na(tot_year$catch_1000t)] <- 0.049
 
-dat_new_3 <- rbind(dat_new_sum, tot_year_area, tot_year)
+dat_new_3 <- rbind(dat_new_sum, tot_year_ctry, tot_year)
 
 # Combine ----
 
