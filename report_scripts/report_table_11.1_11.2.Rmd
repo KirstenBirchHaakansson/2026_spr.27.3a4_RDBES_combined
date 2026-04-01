@@ -1,0 +1,917 @@
+---
+output:
+  word_document:
+    reference_docx: report_HR_style_template.docx
+always_allow_html: true
+---
+
+```{r setup, include=FALSE}
+path_root <-
+  "C:/Users/kibi/OneDrive - Danmarks Tekniske Universitet/stock_coord_work/her.27.20-24/2025_her.27.20-24_RDBES_combined/"
+
+# path_root <-
+#   "Q:/mynd/kibi/SC_work/her.27.20-24/2024_her.27.20-24_RDBES_combined/"
+
+knitr::opts_knit$set(root.dir = path_root)
+
+knitr::opts_chunk$set(echo = F,
+                      warning = F,
+                      message = F)
+
+library(dplyr)
+library(flextable)
+library(tidyverse)
+library(readxl)
+
+options(scipen = 9999)
+
+year_data <- 2025
+```
+
+```{r t_3_1_1, ft.align="left"}
+# Input ----
+dat_1 <-
+  read.csv(paste0("output/", "catch_no_sop_year_ctry_1989_", year_data, ".csv"))
+
+
+# Transpose ----
+# Tried out the pivot table package, but not too happy. It takes forever to run and is sometimes sum NA's to 0
+# So I go for a faster and more correct version
+
+dat_1_sum <-
+  summarise(group_by(dat_1, year, area, ctry),
+            catch_1000t = sum(catch_1000t, na.rm = T))
+
+dat_1_total_area <-
+  mutate(summarise(
+    group_by(dat_1, year, ctry),
+    catch_1000t = sum(catch_1000t, na.rm = T)
+  ), area = "Total")
+
+dat_1_1 <- rbind(dat_1_sum, dat_1_total_area)
+
+dat_total_year <-
+  mutate(summarise(
+    group_by(dat_1_1, year, area),
+    catch_1000t = sum(catch_1000t, na.rm = T)
+  ), ctry = "Total")
+
+dat_1_2 <- rbind(dat_1_1, dat_total_year)
+
+# dat_1_2$catch_1000t <- format(round(dat_1_2$catch_1000t, digits = 2), nsmall = 2)
+dat_1_2$catch_1000t <- round(dat_1_2$catch_1000t, digits = 2)
+
+dat_1_t <-
+  spread(dat_1_2,
+         key = ctry,
+         value = catch_1000t,
+         fill = 0)
+
+# dat_1_t$Denmark[dat_1_t$Denmark == 0] <- NA
+# dat_1_t$`Faroe Islands`[dat_1_t$`Faroe Islands` == 0] <- NA
+# dat_1_t$Finland[dat_1_t$Finland == 0] <- NA
+# dat_1_t$Germany[dat_1_t$Germany == 0] <- NA
+# dat_1_t$Lithuania[dat_1_t$Lithuania == 0] <- NA
+# # dat_1_t$Netherlands[dat_1_t$Netherlands == 0] <- NA
+# dat_1_t$Norway[dat_1_t$Norway == 0] <- NA
+# dat_1_t$Poland[dat_1_t$Poland == 0] <- NA
+# dat_1_t$Sweden[dat_1_t$Sweden == 0] <- NA
+# dat_1_t$Total[dat_1_t$Total == 0] <- NA
+
+dat_1_t$year <- as.character(dat_1_t$year)
+
+# Flextable ----
+
+set_flextable_defaults(
+  font.family = "Calibri",
+  font.size = 7,
+  padding.bottom = 0,
+  padding.top = 0
+)
+
+t1 <- flextable(dat_1_t) %>%
+  set_table_properties(width = 1, layout = "autofit") %>%
+  bold(part = "header") %>%
+  bold(i = str_detect(dat_1_t$area, "T") == T) %>%
+  bold(i = str_detect(dat_1_t$year, "T") == T) %>%
+  bold(j = "Total") %>%
+  padding(padding.bottom = 0, part = "all") %>%
+  padding(padding.top = 0, part = "all") %>%
+  bg(bg = "#B7D1C3", part = "header") %>%
+  border_inner_h(part = "all") %>%
+  set_caption(
+    caption = paste0(
+      "Table 3.1.1 WESTERN BALTIC HERRING. Both WBSS and NSAS. Total catch in 1989-",
+      year_data,
+      " (1000 tonnes) by year, area and country. Data provided by working group members"
+    ),
+    style = "Table Caption"
+  ) %>%
+  footnote(
+    i = dat_1_t$year == year_data,
+    j = 1,
+    value = as_paragraph(c("Preliminary")),
+    ref_symbols = "*"
+  ) %>% merge_v(part = "footer")  %>%
+  footnote(
+    i = dat_1_t$year == 2006,
+    j = 1,
+    value = as_paragraph(c(
+      "2,000 t of Danish catches are missing (HAWG 2007)"
+    )),
+    ref_symbols = "**"
+  ) %>% merge_v(part = "footer") %>%
+  footnote(
+    i = 108,
+    # Check that this footnote ends up at 2010, 27.3.b.23, Denmark. It is only possible to add symbols to character, so moved the symbol to the area
+    j = 2,
+    value = as_paragraph(c(
+      "Danmark has officially reported 3,103 t of catches (HAWG 2011)"
+    )),
+    ref_symbols = "***"
+  ) %>%
+  colformat_num(big.mark = "", na_str = "-")
+
+t1
+```
+
+```{r t_3_1_2, ft.align="left", eval = T}
+
+# Input ----
+dat_2 <-
+  read.csv(paste0(
+    "output/",
+    "catch_sop_year_fleet_quarter_2004_",
+    year_data,
+    ".csv"
+  ))
+
+# Transpose ----
+# Tried out the pivot table package, but not too happy. It takes forever to run and is sometimes sum NA's to 0
+# So I go for a faster and more correct version
+
+dat_2$quarter <- as.character(dat_2$quarter)
+
+dat_2_sum <-
+  summarise(group_by(dat_2, year, quarter, area, fleet),
+            catch_1000t = sum(catch_1000t, na.rm = T))
+
+dat_2_total_area <-
+  mutate(summarise(
+    group_by(dat_2, year, quarter),
+    catch_1000t = sum(catch_1000t, na.rm = T)
+  ),
+  area = "Total",
+  fleet = "Total")
+
+dat_2_1 <- rbind(dat_2_sum, dat_2_total_area)
+
+dat_total_quarter <-
+  mutate(summarise(
+    group_by(dat_2, year, area, fleet),
+    catch_1000t = sum(catch_1000t, na.rm = T)
+  ), quarter = "Total")
+
+dat_2_2 <- rbind(dat_2_1, dat_total_quarter)
+
+dat_total_year <-
+  mutate(
+    summarise(group_by(dat_2, year), catch_1000t = sum(catch_1000t, na.rm = T)),
+    quarter = "Total",
+    area = "Total",
+    fleet = "Total"
+  )
+
+dat_2_3 <- rbind(dat_2_2, dat_total_year)
+
+dat_2_3$catch_1000t <- round(dat_2_3$catch_1000t, digits = 2)
+
+dat_2_t <-
+  spread(dat_2_3,
+         key = quarter,
+         value = catch_1000t,
+         fill = NA)
+
+dat_2_t$`1`[dat_2_t$`1` == 0] <- NA
+dat_2_t$`2`[dat_2_t$`2` == 0] <- NA
+dat_2_t$`3`[dat_2_t$`3` == 0] <- NA
+dat_2_t$`4`[dat_2_t$`4` == 0] <- NA
+
+dat_2_t$year <- as.character(dat_2_t$year)
+
+# Flextable ----
+
+set_flextable_defaults(
+  font.family = "Calibri",
+  font.size = 7.5,
+  padding.bottom = 0,
+  padding.top = 0
+)
+
+t2 <- flextable(dat_2_t) %>%
+  set_table_properties(width = 1, layout = "autofit") %>%
+  bold(part = "header") %>%
+  bold(i = str_detect(dat_2_t$area, "T") == T) %>%
+  bold(i = str_detect(dat_2_t$year, "T") == T) %>%
+  bold(j = "Total") %>%
+  padding(padding.bottom = 0, part = "all") %>%
+  padding(padding.top = 0, part = "all") %>%
+  bg(bg = "#B7D1C3", part = "header") %>%
+  border_inner_h(part = "all") %>%
+  set_caption(
+    caption = paste0(
+      "Table 3.1.2 WESTERN BALTIC HERRING. Both WBSS and NSAS. Catch (SOP, 1000 tonnes) in 2004-",
+      year_data,
+      " by year, area, fleet and quarter"
+    ),
+    style = "Table Caption"
+  ) %>%
+  footnote(
+    i = dat_2_t$year == year_data,
+    j = 1,
+    value = as_paragraph(c("Preliminary")),
+    ref_symbols = "*"
+  ) %>% merge_v(part = "footer") %>%
+  colformat_num(big.mark = "", na_str = "-")
+
+t2
+```
+
+```{r data_for_table_3_2, include = F, eval = F}
+
+canumF <-
+  readRDS(paste(
+    "data/",
+    "C5_her2024_canum_with_imputations_subfleets_",
+    year_data,
+    ".rds",
+    sep = ""
+  ))
+
+canumF$caton_t<-canumF$canum_1000*(canumF$weca_g/1000)
+canumF$caton_t[is.na(canumF$caton_t)]<-0
+canumF$weca_g[is.na(canumF$weca_g)]<-0
+canumF$canum_mill<-canumF$canum_1000/1000
+
+impu <- read.csv(paste0("boot/data/imputations/", "C4_her2024_missing_bio_", year_data, "_filled.csv"), sep = ";")
+
+impu <- subset(impu,year == year_data)
+
+
+canumFS <-
+  readRDS(paste(
+    "data/",
+    "C6_her2024_canum_wbss_nsas_",
+    year_data,
+    ".rds",
+    sep = ""
+  ))
+
+canumFS$nsas_caton_t <- canumFS$nsas_canum_1000 * (canumFS$weca_g / 1000)
+canumFS$nsas_caton_t[is.na(canumFS$nsas_caton_t)] <- 0
+
+canumFS$wbss_caton_t <- canumFS$wbss_canum_1000 * (canumFS$weca_g / 1000)
+canumFS$wbss_caton_t[is.na(canumFS$wbss_caton_t)] <- 0
+
+canumFS$nsas_canum_mill <- canumFS$nsas_canum_1000 / 1000
+canumFS$wbss_canum_mill <- canumFS$wbss_canum_1000 / 1000
+
+dat_327 <- read.csv(paste0("output/", "wbss_canum_weca_year_1993_", year_data, ".csv"), sep = ",")
+dat_328 <- read.csv(paste0("output/", "nsas_canum_weca_sop_year_1993_", year_data, ".csv"), sep = ",")
+
+```
+
+\newpage
+
+```{r t_3_2_1, ft.align="left", eval = T}
+
+
+canumF1 <-
+  subset(
+    canumF,
+    area %in% c("27.3.a.20") &
+      ctry %in% c("Denmark", "Faroe Islands", "Germany", "Norway", "Sweden") |
+      area %in% c("27.3.a.21") &
+      ctry %in% c("Denmark", "Germany", "Sweden") |
+      area %in% c("27.3.c.22", "27.3.d.24") &
+      ctry %in% c("Denmark", "Germany", "Poland", "Sweden", "Finland") |
+      area %in% c("27.3.b.23")  &
+      ctry %in% c("Denmark", "Sweden")
+  )
+
+data_321 <-
+  aggregate(
+    cbind(caton_t) ~ year + area + quarter + ctry + noSamples +
+      noLength + noAge + fleet + subFleet,
+    data = canumF1,
+    FUN = sum
+  )
+data_321 <- rename(data_321, "SOP_1000t" = caton_t, "noSample" = noSamples)
+data_321 <-
+  aggregate(
+    cbind(SOP_1000t, noSample, noLength, noAge) ~ year + area + quarter + ctry +
+      fleet + subFleet,
+    data = data_321,
+    FUN = sum
+  )
+data_321 <- arrange(data_321, year, area, fleet, subFleet, ctry, quarter)
+
+data_321_total <-
+  mutate(
+    summarise(
+      group_by(data_321, year),
+      SOP_1000t = sum(SOP_1000t),
+      noSample = sum(noSample),
+      noLength = sum(noLength),
+      noAge = sum(noAge)
+    ),
+    area = "Total",
+    quarter = "Total",
+    ctry = "Total",
+    fleet = "Total",
+    subFleet = "Total"
+  )
+
+data_321_done <- rbind(data_321, data_321_total)
+
+
+data_321_done$SOP_1000t <- round(data_321_done$SOP_1000t, digits = 1)
+
+data_321_done <-
+  rename(
+    data_321_done,
+    country = ctry,
+    `sub-fleet` = subFleet,
+    `catch (t)` = SOP_1000t,
+    `number of samples` = noSample,
+    `number of fish measured` = noLength,
+    `number of fish aged` = noAge
+  )
+
+
+data_321_done$`number of samples`[data_321_done$`number of samples` == 0] <-
+  NA
+data_321_done$`number of fish measured`[data_321_done$`number of fish measured` == 0] <-
+  NA
+data_321_done$`number of fish aged`[data_321_done$`number of fish aged` == 0] <-
+  NA
+
+set_flextable_defaults(
+  font.family = "Calibri",
+  font.size = 6,
+  padding.bottom = 0,
+  padding.top = 0
+)
+
+t3 <- flextable(data_321_done) %>%
+  set_table_properties(width = 1, layout = "autofit") %>%
+  bold(part = "header") %>%
+  bold(i = str_detect(data_321_done$area, "T") == T) %>%
+  padding(padding.bottom = 0, part = "all") %>%
+  padding(padding.top = 0, part = "all") %>%
+  bg(bg = "#B7D1C3", part = "header") %>%
+  border_inner_h(part = "all") %>%
+  set_caption(
+    caption = paste0(
+      "Table 3.2.1 WESTERN BALTIC HERRING. Both WBSS and NSAS. Samples of commercial catch available to the Working Group by area, quarter, country, fleet and sub-fleet for ",
+      year_data
+    ),
+    style = "Table Caption"
+  ) %>%
+  colformat_num(big.mark = "", na_str = "-")
+
+t3
+
+```
+
+
+```{r t_3_2_2, ft.align="left", eval = T}
+
+impu <-
+  mutate(impu, comment2 = ifelse(
+    is.na(comment) |
+      comment == "",
+    paste0(
+      useYear,
+      " ",
+      useCtry,
+      " ",
+      useArea,
+      " ",
+      "fleet",
+      useSubFleet,
+      " ",
+      "Q",
+      useQuarter
+    ),
+    comment
+  ))
+
+dat_322 <-
+  subset(
+    impu,
+    area %in% c("27.3.a.20") &
+      ctry %in% c("Denmark", "Faroe Islands", "Germany", "Norway", "Sweden") & comment2 != "No landings" |
+      area %in% c("27.3.a.21") &
+      ctry %in% c("Denmark", "Germany", "Sweden") & comment2 != "No landings" |
+      area %in% c("27.3.c.22", "27.3.d.24") &
+      ctry %in% c("Denmark", "Germany", "Poland", "Sweden", "Finland") & comment2 != "No landings" |
+      area %in% c("27.3.b.23")  &
+      ctry %in% c("Denmark", "Sweden") & comment2 != "No landings"
+  )
+
+dat_322 <-
+  summarise(
+    group_by(dat_322, year, area, ctry, quarter, subFleet, comment2),
+    catch_t = round(sum(catch_t, na.rm = F), digits = 1)
+  )
+dat_322 <- arrange(dat_322, year, area, ctry, subFleet, quarter)
+
+dat_322 <-
+  select(dat_322, year, area, quarter, ctry, subFleet, catch_t, comment2)
+
+dat_322 <- rename(dat_322, sampling = comment2, 
+    `sub-fleet` = subFleet)
+
+dat_322 <- rename(dat_322, `catch (t)` = catch_t)
+
+set_flextable_defaults(
+  font.family = "Calibri",
+  font.size = 7.5,
+  padding.bottom = 0,
+  padding.top = 0
+)
+
+t4 <- flextable(dat_322) %>%
+  set_table_properties(width = 1, layout = "autofit") %>%
+  bold(part = "header") %>%
+  bold(i = str_detect(dat_322$area, "T") == T) %>%
+  padding(padding.bottom = 0, part = "all") %>%
+  padding(padding.top = 0, part = "all") %>%
+  bg(bg = "#B7D1C3", part = "header") %>%
+  border_inner_h(part = "all") %>%
+  set_caption(
+    caption = paste0(
+      "Table 3.2.2 WESTERN BALTIC HERRING. Both WBSS and NSAS. Samples of commercial catch by quarter, sub-fleet and area for ",
+      year_data,
+      " used to estimate catch in numbers and mean weight at age as W-ringers for ",
+      year_data
+    ),
+    style = "Table Caption"
+  ) %>%
+  colformat_num(big.mark = "", na_str = "-")
+
+t4
+```
+
+
+```{r t_3_2_3, ft.align="left", eval = T}
+
+data_323 <- summarise(group_by(canumF, year, area, fleet, quarter, wr), caton_t = sum(caton_t, na.rm = 0),
+                      canum_mill = sum(canum_mill, na.rm = T))
+
+data_323$weca <- data_323$caton_t/data_323$canum_mill
+
+# Prep CANUM
+data_323_canum <- select(data_323,-caton_t,-weca)
+data_323_canum_total <-
+  mutate(summarise(
+    group_by(data_323, year, area, fleet, quarter),
+    canum_mill = sum(canum_mill, na.rm = T)
+  ), wr = "Total")
+data_323_canum_all <- rbind(data_323_canum, data_323_canum_total)
+data_323_canum_all$type <- "CANUM"
+data_323_canum_all$canum_mill[data_323_canum_all$canum_mill == 0] <- NA
+data_323_canum_all$canum_mill <- round(data_323_canum_all$canum_mill, digits = 2)
+data_323_canum_t <-
+  spread(data_323_canum_all, key = wr, value = round(canum_mill, digits = 2))
+
+# Prep weca
+data_323_weca <- select(data_323, -caton_t, -canum_mill)
+data_323_weca_total <-
+  mutate(summarise(
+    group_by(data_323, year, area, fleet, quarter),
+    weca = sum(caton_t, na.rm = T) / sum(canum_mill, na.rm = T)
+  ), wr = "Total")
+data_323_weca_all <- rbind(data_323_weca, data_323_weca_total)
+data_323_weca_all$type <- "WECA"
+data_323_weca_all$weca <- round(data_323_weca_all$weca, digits = 2)
+data_323_weca_t <-
+  spread(data_323_weca_all, key = wr, value = weca)
+
+# Prep SOP
+data_323_sop <- select(data_323,-canum_mill, -weca)
+data_323_sop_total <-
+  mutate(summarise(
+    group_by(data_323, year, area, fleet, quarter),
+    caton_t = sum(caton_t, na.rm = T)
+  ), wr = "Total")
+data_323_sop_all <- rbind(data_323_sop, data_323_sop_total)
+data_323_sop_all$type <- "SOP"
+data_323_sop_all$caton_t[data_323_sop_all$caton_t == 0] <- NA
+data_323_sop_all$caton_t <- round(data_323_sop_all$caton_t, digits = 2)
+data_323_sop_t <-
+  spread(data_323_sop_all, key = wr, value = caton_t)
+
+
+data_323_t <- rbind(data_323_canum_t, data_323_weca_t, data_323_sop_t)
+data_323_t <- arrange(data_323_t, type, year, area, fleet, quarter)
+
+
+set_flextable_defaults(
+  font.family = "Calibri",
+  font.size = 6.5,
+  padding.bottom = 0,
+  padding.top = 0
+)
+
+t5 <- flextable(data_323_t) %>%
+  set_table_properties(width = 1, layout = "autofit") %>%
+  bold(part = "header") %>%
+  bold(j = "Total")%>%
+  padding(padding.bottom = 0, part = "all") %>%
+  padding(padding.top = 0, part = "all") %>%
+  bg(bg = "#B7D1C3", part = "header") %>%
+  border_inner_h(part = "all") %>%
+  set_caption(caption = paste0("Table 3.2.3 WESTERN BALTIC HERRING. Both WBSS and NSAS. CANUM: Catch in numbers (mill), WECA: mean weight (g) and SOP (t) by age as W-ringers, area, fleet and quarter in ", year_data),
+              style = "Table Caption") %>%
+  colformat_num(
+  big.mark = "", na_str = "-", nan_str = "-")
+
+t5
+
+```
+
+```{r r t_3_2_4, ft.align="left", eval = T}
+
+data_324 <- distinct(subset(canumFS, area %in% c("27.3.a.20", "27.3.a.21")), year, area, quarter, wr, nsas, wbss, n)
+
+data_324_stock <- select(data_324, -n)
+data_324_n <- select(data_324, -nsas, -wbss)
+data_324_n <- mutate(rename(data_324_n, prop = n), type = "n")
+
+data_324_stock_g <- gather(data_324_stock, key = type, value = prop, -c(year, area, quarter, wr))
+data_324_stock_g$type[data_324_stock_g$type == "nsas"] <- "NSAS"
+data_324_stock_g$type[data_324_stock_g$type == "wbss"] <- "WBSS"
+
+data_324_all <- rbind(data_324_stock_g, data_324_n)
+
+data_324_all_t <- spread(data_324_all, key = wr, value = prop)
+
+
+set_flextable_defaults(
+  font.family = "Calibri",
+  font.size = 7,
+  padding.bottom = 0,
+  padding.top = 0
+)
+
+t6 <- flextable(data_324_all_t) %>%
+  set_table_properties(width = 1, layout = "autofit") %>%
+  bold(part = "header") %>%
+  padding(padding.bottom = 0, part = "all") %>%
+  padding(padding.top = 0, part = "all") %>%
+  bg(bg = "#B7D1C3", part = "header") %>%
+  border_inner_h(part = "all") %>%
+  set_caption(caption = "Table 3.2.4 WESTERN BALTIC HERRING. Proportion of North Sea autumn spawners (NSAS) and Western Baltic spring spawners (WBSS) in Skagerrak (27.3.a.20) and Kattegat (27.3.a.21) by age as W-ringers and quarter. n: number of individuals sampled for stock. The samples can come from both commercial and scientific survey samping schemes",
+              style = "Table Caption") %>%
+  colformat_num(
+  big.mark = "", na_str = "-", nan_str = "-") %>%
+  colformat_double(na_str = "-", nan_str = "-", digits = 4) %>%
+  colformat_double(i = data_324_all_t$type == "n",
+  digits = 0, na_str = "-", nan_str = "-") 
+
+t6
+
+```
+
+```{r t_3_2_5, ft.align="left", eval = T}
+
+data_325 <- summarise(group_by(subset(canumFS, area %in% c("27.3.a.20", "27.3.a.21")), year, area, fleet, quarter, wr), caton_t = sum(nsas_caton_t, na.rm = 0),
+                      canum_mill = sum(nsas_canum_mill, na.rm = T))
+
+data_325$weca <- data_325$caton_t/data_325$canum_mill
+
+# Prep CANUM
+data_325_canum <- select(data_325,-caton_t,-weca)
+data_325_canum_total <-
+  mutate(summarise(
+    group_by(data_325, year, area, fleet, quarter),
+    canum_mill = sum(canum_mill, na.rm = T)
+  ), wr = "Total")
+data_325_canum_all <- rbind(data_325_canum, data_325_canum_total)
+data_325_canum_all$type <- "CANUM"
+data_325_canum_all$canum_mill[data_325_canum_all$canum_mill == 0] <- NA
+data_325_canum_all$canum_mill <- round(data_325_canum_all$canum_mill, digits = 2)
+data_325_canum_t <-
+  spread(data_325_canum_all, key = wr, value = round(canum_mill, digits = 2))
+
+
+# Prep weca
+data_325_weca <- select(data_325, -caton_t, -canum_mill)
+data_325_weca_total <-
+  mutate(summarise(
+    group_by(data_325, year, area, fleet, quarter),
+    weca = sum(caton_t, na.rm = T) / sum(canum_mill, na.rm = T)
+  ), wr = "Total")
+data_325_weca_all <- rbind(data_325_weca, data_325_weca_total)
+data_325_weca_all$type <- "WECA"
+data_325_weca_all$weca <- round(data_325_weca_all$weca, digits = 2)
+data_325_weca_t <-
+  spread(data_325_weca_all, key = wr, value = weca)
+
+# Prep SOP
+data_325_sop <- select(data_325,-canum_mill, -weca)
+data_325_sop_total <-
+  mutate(summarise(
+    group_by(data_325, year, area, fleet, quarter),
+    caton_t = sum(caton_t, na.rm = T)
+  ), wr = "Total")
+data_325_sop_all <- rbind(data_325_sop, data_325_sop_total)
+data_325_sop_all$type <- "SOP"
+data_325_sop_all$caton_t[data_325_sop_all$caton_t == 0] <- NA
+data_325_sop_all$caton_t <- round(data_325_sop_all$caton_t, digits = 2)
+data_325_sop_t <-
+  spread(data_325_sop_all, key = wr, value = caton_t)
+
+
+data_325_t <- rbind(data_325_canum_t, data_325_weca_t, data_325_sop_t)
+data_325_t <- arrange(data_325_t, type, year, area, fleet, quarter)
+
+
+set_flextable_defaults(
+  font.family = "Calibri",
+  font.size = 6.5,
+  padding.bottom = 0,
+  padding.top = 0
+)
+
+t7 <- flextable(data_325_t) %>%
+  set_table_properties(width = 1, layout = "autofit") %>%
+  bold(part = "header") %>%
+  bold(j = "Total")%>%
+  padding(padding.bottom = 0, part = "all") %>%
+  padding(padding.top = 0, part = "all") %>%
+  bg(bg = "#B7D1C3", part = "header") %>%
+  border_inner_h(part = "all") %>%
+  set_caption(caption = paste0("Table 3.2.5 WESTERN BALTIC HERRING. NSAS in Skagerrak (27.3.a.20) and Kattegat (27.3.a.21). CANUM: Catch in numbers (mill), WECA: mean weight (g) and SOP (t) by age as W-ringers, area, fleet and quarter in ", year_data),
+              style = "Table Caption") %>%
+  colformat_num(
+  big.mark = "", na_str = "-", nan_str = "-")
+
+t7
+
+```
+
+
+```{r t_3_2_6, ft.align="left", eval = T}
+
+wbss3 <- summarise(group_by(canumFS, year, area, fleet, quarter, wr), caton_t = sum(wbss_caton_t, na.rm = 0),
+                      canum_mill = sum(wbss_canum_mill, na.rm = T))
+
+wbss4 <- read_excel(
+  paste(
+    "boot/data/split_data/",
+    "Her21-IVaE_transfer_only_split_",
+    year_data,
+    ".xlsx",
+    sep = ""
+  ),
+  sheet = 3
+)
+wbss4$wr<-ifelse(wbss4$wr %in% c("8","9"), "8+", wbss4$wr)
+wbss4_sum <- mutate(summarise(group_by(wbss4, year, area, quarter, wr), caton_t = sum(canum_000*weca_kg, na.rm = 0),
+                      canum_mill = sum(canum_000/1000, na.rm = T)), fleet = "A")
+
+data_326<-rbind(wbss3,wbss4_sum)
+
+data_326$weca <- data_326$caton_t/data_326$canum_mill
+
+# Prep CANUM
+data_326_canum <- select(data_326,-caton_t,-weca)
+data_326_canum_total <-
+  mutate(summarise(
+    group_by(data_326, year, area, fleet, quarter),
+    canum_mill = sum(canum_mill, na.rm = T)
+  ), wr = "Total")
+data_326_canum_all <- rbind(data_326_canum, data_326_canum_total)
+data_326_canum_all$type <- "CANUM"
+data_326_canum_all$canum_mill[data_326_canum_all$canum_mill == 0] <- NA
+data_326_canum_all$canum_mill <- round(data_326_canum_all$canum_mill, digits = 2)
+data_326_canum_t <-
+  spread(data_326_canum_all, key = wr, value = round(canum_mill, digits = 2))
+
+
+# Prep weca
+data_326_weca <- select(data_326, -caton_t, -canum_mill)
+data_326_weca_total <-
+  mutate(summarise(
+    group_by(data_326, year, area, fleet, quarter),
+    weca = sum(caton_t, na.rm = T) / sum(canum_mill, na.rm = T)
+  ), wr = "Total")
+data_326_weca_all <- rbind(data_326_weca, data_326_weca_total)
+data_326_weca_all$type <- "WECA"
+data_326_weca_all$weca <- round(data_326_weca_all$weca, digits = 2)
+data_326_weca_t <-
+  spread(data_326_weca_all, key = wr, value = weca)
+
+# Prep SOP
+data_326_sop <- select(data_326,-canum_mill, -weca)
+data_326_sop_total <-
+  mutate(summarise(
+    group_by(data_326, year, area, fleet, quarter),
+    caton_t = sum(caton_t, na.rm = T)
+  ), wr = "Total")
+data_326_sop_all <- rbind(data_326_sop, data_326_sop_total)
+data_326_sop_all$type <- "SOP"
+data_326_sop_all$caton_t[data_326_sop_all$caton_t == 0] <- NA
+data_326_sop_all$caton_t <- round(data_326_sop_all$caton_t, digits = 2)
+data_326_sop_t <-
+  spread(data_326_sop_all, key = wr, value = caton_t)
+
+
+data_326_t <- rbind(data_326_canum_t, data_326_weca_t, data_326_sop_t)
+data_326_t <- arrange(data_326_t, type, year, area, fleet, quarter)
+
+
+set_flextable_defaults(
+  font.family = "Calibri",
+  font.size = 6,
+  padding.bottom = 0,
+  padding.top = 0
+)
+
+t8 <- flextable(data_326_t) %>%
+  set_table_properties(width = 1, layout = "autofit") %>%
+  bold(part = "header") %>%
+  bold(j = "Total")%>%
+  padding(padding.bottom = 0, part = "all") %>%
+  padding(padding.top = 0, part = "all") %>%
+  bg(bg = "#B7D1C3", part = "header") %>%
+  border_inner_h(part = "all") %>%
+  set_caption(caption = paste0("Table 3.2.6 WESTERN BALTIC HERRING. WBSS. CANUM: Catch in numbers (mill), WECA: mean weight (g) and SOP (t) by age as W-ringers, area, fleet and quarter in ", year_data),
+              style = "Table Caption") %>%
+  colformat_num(
+  big.mark = "", na_str = "-", nan_str = "-")
+
+t8
+
+```
+
+```{r t_3_2_7, ft.align="left", eval = T}
+
+# names(dat_327)
+
+dat_327$sop <- dat_327$weca_g*(dat_327$wbss_canum_1000)
+
+# Prep CANUM
+data_327_canum <- select(dat_327,-weca_g, -sop)
+data_327_canum$wbss_canum_1000 <- data_327_canum$wbss_canum_1000/1000
+data_327_canum_total <-
+  mutate(summarise(
+    group_by(dat_327, year, area),
+    wbss_canum_1000 = sum(wbss_canum_1000/1000, na.rm = T)
+  ), wr = "Total")
+data_327_canum_all <- rbind(data_327_canum, data_327_canum_total)
+data_327_canum_all$type <- "CANUM"
+data_327_canum_all$wbss_canum_1000[data_327_canum_all$wbss_canum_1000 == 0] <- NA
+data_327_canum_all$wbss_canum_1000 <- round(data_327_canum_all$wbss_canum_1000, digits = 2)
+data_327_canum_t <-
+  spread(data_327_canum_all, key = wr, value = wbss_canum_1000)
+
+
+# Prep weca
+data_327_weca <- select(dat_327, -sop, -wbss_canum_1000)
+data_327_weca_total <-
+  mutate(summarise(
+    group_by(dat_327, year, area),
+    weca_g = sum(sop, na.rm = T) / sum(wbss_canum_1000, na.rm = T)
+  ), wr = "Total")
+data_327_weca_all <- rbind(data_327_weca, data_327_weca_total)
+data_327_weca_all$type <- "WECA"
+data_327_weca_all$weca_g <- round(data_327_weca_all$weca_g, digits = 2)
+data_327_weca_t <-
+  spread(data_327_weca_all, key = wr, value = weca_g)
+
+# Prep SOP
+data_327_sop <- select(dat_327,-wbss_canum_1000, -weca_g)
+data_327_sop$sop <- data_327_sop$sop/1000
+data_327_sop_total <-
+  mutate(summarise(
+    group_by(dat_327, year, area),
+    sop = sum(sop/1000, na.rm = T)
+  ), wr = "Total")
+data_327_sop_all <- rbind(data_327_sop, data_327_sop_total)
+data_327_sop_all$type <- "SOP"
+data_327_sop_all$sop[data_327_sop_all$sop == 0] <- NA
+data_327_sop_all$sop <- round(data_327_sop_all$sop, digits = 2)
+data_327_sop_t <-
+  spread(data_327_sop_all, key = wr, value = sop)
+
+
+data_327_t <- rbind(data_327_canum_t, data_327_weca_t, data_327_sop_t)
+data_327_t <- arrange(data_327_t, type, year, area)
+
+
+set_flextable_defaults(
+  font.family = "Calibri",
+  font.size = 5.5,
+  padding.bottom = 0,
+  padding.top = 0
+)
+
+t9 <- flextable(data_327_t) %>%
+  set_table_properties(width = 1, layout = "autofit") %>%
+  bold(part = "header") %>%
+  bold(j = "Total")%>%
+  padding(padding.bottom = 0, part = "all") %>%
+  padding(padding.top = 0, part = "all") %>%
+  bg(bg = "#B7D1C3", part = "header") %>%
+  border_inner_h(part = "all") %>%
+  set_caption(caption = paste0("Table 3.2.7 WESTERN BALTIC HERRING. WBSS. CANUM: Catch in numbers (mill), WECA: mean weight (g) and SOP (t) by age as W-ringers in 1993-", year_data),
+              style = "Table Caption") %>%
+  colformat_num(
+  big.mark = "", na_str = "-", nan_str = "-")
+
+t9
+
+```
+
+```{r t_3_2_8, ft.align="left", eval = T}
+
+# names(dat_328)
+
+dat_328$sop <- dat_328$weca_g*(dat_328$nsas_canum_1000)
+
+# Prep CANUM
+data_328_canum <- select(dat_328,-weca_g, -catch_t, -sop)
+data_328_canum$nsas_canum_1000 <- data_328_canum$nsas_canum_1000/1000
+data_328_canum_total <-
+  mutate(summarise(
+    group_by(dat_328, year, area),
+    nsas_canum_1000 = sum(nsas_canum_1000/1000, na.rm = T)
+  ), wr = "Total")
+data_328_canum_all <- rbind(data_328_canum, data_328_canum_total)
+data_328_canum_all$type <- "CANUM"
+data_328_canum_all$nsas_canum_1000[data_328_canum_all$nsas_canum_1000 == 0] <- NA
+data_328_canum_all$nsas_canum_1000 <- round(data_328_canum_all$nsas_canum_1000, digits = 2)
+data_328_canum_t <-
+  spread(data_328_canum_all, key = wr, value = nsas_canum_1000)
+
+
+# Prep weca
+data_328_weca <- select(dat_328, -sop, -nsas_canum_1000, -catch_t)
+data_328_weca_total <-
+  mutate(summarise(
+    group_by(dat_328, year, area),
+    weca_g = sum(sop, na.rm = T) / sum(nsas_canum_1000, na.rm = T)
+  ), wr = "Total")
+data_328_weca_all <- rbind(data_328_weca, data_328_weca_total)
+data_328_weca_all$type <- "WECA"
+data_328_weca_all$weca_g <- round(data_328_weca_all$weca_g, digits = 2)
+data_328_weca_t <-
+  spread(data_328_weca_all, key = wr, value = weca_g)
+
+# Prep SOP
+data_328_sop <- select(dat_328,-nsas_canum_1000, -weca_g, -catch_t)
+data_328_sop$sop <- data_328_sop$sop/1000
+data_328_sop_total <-
+  mutate(summarise(
+    group_by(dat_328, year, area),
+    sop = sum(sop/1000, na.rm = T)
+  ), wr = "Total")
+data_328_sop_all <- rbind(data_328_sop, data_328_sop_total)
+data_328_sop_all$type <- "SOP"
+data_328_sop_all$sop[data_328_sop_all$sop == 0] <- NA
+data_328_sop_all$sop <- round(data_328_sop_all$sop, digits = 2)
+data_328_sop_t <-
+  spread(data_328_sop_all, key = wr, value = sop)
+
+
+data_328_t <- rbind(data_328_canum_t, data_328_weca_t, data_328_sop_t)
+data_328_t <- arrange(data_328_t, type, year, area)
+
+
+set_flextable_defaults(
+  font.family = "Calibri",
+  font.size = 6.5,
+  padding.bottom = 0,
+  padding.top = 0
+)
+
+t10 <- flextable(data_328_t) %>%
+  set_table_properties(width = 1, layout = "autofit") %>%
+  bold(part = "header") %>%
+  bold(j = "Total")%>%
+  padding(padding.bottom = 0, part = "all") %>%
+  padding(padding.top = 0, part = "all") %>%
+  bg(bg = "#B7D1C3", part = "header") %>%
+  border_inner_h(part = "all") %>%
+  set_caption(caption = paste0("Table 3.2.8 WESTERN BALTIC HERRING. NSAS. CANUM: Catch in numbers (mill), WECA: mean weight (g) and SOP (t) by age as W-ringers in 1993-", year_data),
+              style = "Table Caption") %>%
+  colformat_num(
+  big.mark = "", na_str = "-", nan_str = "-")
+
+t10
+```
+
