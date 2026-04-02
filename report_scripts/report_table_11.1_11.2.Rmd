@@ -31,13 +31,13 @@ year_last <- 2025
 ```{r t_8, ft.align="left"}
 # Input ----
 dat <-
-  read.csv(paste0(paste0("./data/11_catch_year_country_div_2005_", year_last, ".csv")), sep = ";")
+  read.csv(paste0(paste0("../data/11_catch_year_country_div_2005_", year_last, ".csv")), sep = ";")
 
 total <- dat
 total$catch_1000t[total$catch_1000t <= 0.049 & total$catch_1000t != 0] <- "+"
 total_t <- arrange(tidyr::spread(total, key = ctry, value = catch_1000t, fill = 0), year, area)
 total_t <- select(total_t, year, area, BE, DE, DK, FO, FR, `GB-EAW`, `GB-SCT`, NL, NO, SE, Total)
-names(total_t)
+# names(total_t)
 names(total_t) <- c("Year", "Area", "Belgium", "Germany", "Denmark", 
                     "Faroe Islands", "France", "England and Wales", 
                     "Scotland", "Netherlands", "Norway", "Sweden", "Total")
@@ -113,7 +113,49 @@ t1
 
 ```{r}
 
+dat <- read.csv(paste0(paste0(paste0("../data/11_catch_year_quarter_div_2005_", year_last, ".csv"))), sep = ";")
 
+total <- dat
+total$catch_t[total$catch_t <= 0.49 & total$catch_t != 0] <- "+"
+total_t <- arrange(tidyr::spread(total, key = area, value = catch_t, fill = 0), year)
+# names(total_t)  
+  
+total_t <- rename(total_t, "Year" = "year", "Quarter" = "quarter")
+total_t$Year <- as.character(total_t$Year)
 
+t1 <- flextable(total_t) %>%
+  set_table_properties(width = 1, layout = "autofit") %>%
+  bold(part = "header") %>% 
+  bold(i = str_detect(total_t$Year, "T") == T) %>%
+  bold(i = str_detect(total_t$Quarter, "T") == T) %>%
+  bold(j = "Total") %>%
+  padding(padding.bottom = 0, part = "all") %>%
+  padding(padding.top = 0, part = "all") %>%
+  bg(bg = "#B7D1C3", part = "header") %>%
+  border_inner_h(part = "all") %>%
+  set_caption(
+    caption = paste0(
+      "Table 11.1.2. North Sea & 3.a sprat. Catches (tonnes) by quarter. Catches in coastal areas of Norway and Sweden excluded. Data for 1996–1999 in ICES (2006)."
+    ),
+    style = "Table Caption"
+  ) %>%
+  footnote(
+    i = total_t$Year == year_last,
+    j = 1,
+    value = as_paragraph(c("Preliminary")),
+    ref_symbols = "*"
+  ) %>% merge_v(part = "footer")  %>%
+  footnote(
+    i = total_t$Year == year_last + 1,
+    j = 1,
+    value = as_paragraph(c(
+      "Preliminary catches reported from Denmark up until 01 March."
+    )),
+    ref_symbols = "**"
+  ) %>%
+  add_footer_lines("+ Less than 0.5 tonnes.") %>%
+  colformat_num(big.mark = "", na_str = "-")
+
+t1
 ```
 
