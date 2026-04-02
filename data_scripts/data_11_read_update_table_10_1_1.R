@@ -94,6 +94,7 @@ unique(dat_5$ctry)
 ## Fix missing German landings 2023 ----
 dat_5$catch_1000t[dat_5$ctry == "DE" & dat_5$year == 2023 & dat_5$area == "27.4.b"] <- 
   round(3.237848, digits = 1)
+
 dat_5$catch_1000t[dat_5$ctry == "Total" & dat_5$year == 2023 & dat_5$area == "27.4.b"] <- 
   round(3.237848 + dat_5$catch_1000t[dat_5$ctry == "Total" & 
                                        dat_5$year == 2023 & dat_5$area == "27.4.b"], digits = 1)
@@ -106,17 +107,17 @@ swe_sum <- rename(swe_sum, year = Year)
 
 dat_6 <- left_join(dat_5, swe_sum)
 
-dat_6$catch_1000t[dat_5$ctry == "SE" & dat_5$area == "27.3.a"] <- 
-  round(dat_6$catch_1000t[dat_5$ctry == "SE" & dat_5$area == "27.3.a"] -
-  dat_6$catch_swe_coast_1000t[dat_5$ctry == "SE" & dat_5$area == "27.3.a"], digits = 1)
+dat_6$catch_1000t[dat_6$ctry == "SE" & dat_6$area == "27.3.a"] <- 
+  round(dat_6$catch_1000t[dat_6$ctry == "SE" & dat_6$area == "27.3.a"] -
+  dat_6$catch_swe_coast_1000t[dat_6$ctry == "SE" & dat_6$area == "27.3.a"], digits = 1)
 
-dat_6$catch_1000t[dat_5$ctry == "Total" & dat_5$area == "27.3.a"]  <- 
-  round(dat_6$catch_1000t[dat_5$ctry == "Total" & dat_5$area == "27.3.a"] -
-          dat_6$catch_swe_coast_1000t[dat_5$ctry == "Total" & dat_5$area == "27.3.a"], digits = 1)
+dat_6$catch_1000t[dat_6$ctry == "Total" & dat_6$area == "27.3.a"]  <- 
+  round(dat_6$catch_1000t[dat_6$ctry == "Total" & dat_6$area == "27.3.a"] -
+          dat_6$catch_swe_coast_1000t[dat_6$ctry == "Total" & dat_6$area == "27.3.a"], digits = 1)
 
-dat_6$catch_1000t[dat_5$ctry == "Total" & dat_5$area == "Total"]  <- 
-  round(dat_6$catch_1000t[dat_5$ctry == "Total" & dat_5$area == "Total"] -
-          dat_6$catch_swe_coast_1000t[dat_5$ctry == "Total" & dat_5$area == "Total"], digits = 1)
+dat_6$catch_1000t[dat_6$ctry == "Total" & dat_6$area == "Total"]  <- 
+  round(dat_6$catch_1000t[dat_6$ctry == "Total" & dat_6$area == "Total"] -
+          dat_6$catch_swe_coast_1000t[dat_6$ctry == "Total" & dat_6$area == "Total"], digits = 1)
 
 # Add recent year ----
 
@@ -144,6 +145,12 @@ tot_year_ctry$catch_1000t[tot_year_ctry$catch_1000t <= 0.049] <- NA
 tot_year_ctry$catch_1000t <- round(tot_year_ctry$catch_1000t, digits = 1)
 tot_year_ctry$catch_1000t[is.na(tot_year_ctry$catch_1000t)] <- 0.049
 
+tot_year_area <- summarise(group_by(dat_new_2, year, area), catch_1000t = sum(catch_in_ton/1000))
+tot_year_area$ctry <- "Total"
+tot_year_area$catch_1000t[tot_year_area$catch_1000t <= 0.049] <- NA
+tot_year_area$catch_1000t <- round(tot_year_area$catch_1000t, digits = 1)
+tot_year_area$catch_1000t[is.na(tot_year_area$catch_1000t)] <- 0.049
+
 tot_year <- summarise(group_by(dat_new_2, year), catch_1000t = sum(catch_in_ton/1000))
 tot_year$ctry <- "Total"
 tot_year$area <- "Total"
@@ -151,7 +158,7 @@ tot_year$catch_1000t[tot_year$catch_1000t <= 0.049] <- NA
 tot_year$catch_1000t <- round(tot_year$catch_1000t, digits = 1)
 tot_year$catch_1000t[is.na(tot_year$catch_1000t)] <- 0.049
 
-dat_new_3 <- rbind(dat_new_sum, tot_year_ctry, tot_year)
+dat_new_3 <- rbind(dat_new_sum, tot_year_ctry, tot_year_area, tot_year)
 
 # Combine ----
 
