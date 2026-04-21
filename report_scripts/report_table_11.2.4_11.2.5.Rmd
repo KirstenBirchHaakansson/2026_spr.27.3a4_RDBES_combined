@@ -1,0 +1,138 @@
+---
+output:
+  word_document:
+    reference_docx: report_HR_style_template.docx
+always_allow_html: true
+---
+
+```{r setup, include=FALSE}
+path_root <-
+  "C:/Users/kibi/OneDrive - Danmarks Tekniske Universitet/stock_coord_work/spr.27.3a4/2026_spr.27.3a4_RDBES_combined/report_scripts/"
+
+# path_root <-
+#   "Q:/mynd/kibi/SC_work/her.27.20-24/2024_her.27.20-24_RDBES_combined/"
+
+knitr::opts_knit$set(root.dir = path_root)
+
+knitr::opts_chunk$set(echo = F,
+                      warning = F,
+                      message = F)
+
+library(dplyr)
+library(flextable)
+library(tidyverse)
+library(readxl)
+
+options(scipen = 9999)
+
+year_last <- 2025
+```
+
+```{r t_8, ft.align="left"}
+# Input ----
+dat <-
+  read.csv(paste0(paste0("../data/no_samples_", year_last - 1, "_", year_last + 1, ".csv")), sep = ",")
+
+dat <- subset(dat, year == year_last)
+dat$country[dat$country == "DK"] <- "Denmark"
+dat$country[dat$country == "NO"] <- "Norway"
+dat$country[dat$country == "SE"] <- "Sweden"
+
+dat_sum <- summarise(group_by(dat, country, quarter), 
+                     catch_in_ton = sum(catch_in_ton, na.rm = T),
+                     no.of.samples = sum(no.of.samples, na.rm = T),
+                     no.of.length = sum(no.of.length, na.rm = T),
+                     no.of.age = sum(no.of.age, na.rm = T)) 
+
+dat_sum$quarter <- as.character(dat_sum$quarter)
+
+dat_q_total <- summarise(group_by(dat, quarter), 
+                     catch_in_ton = sum(catch_in_ton, na.rm = T),
+                     no.of.samples = sum(no.of.samples, na.rm = T),
+                     no.of.length = sum(no.of.length, na.rm = T),
+                     no.of.age = sum(no.of.age, na.rm = T))
+
+dat_q_total$country = "Total"
+dat_q_total$quarter <- as.character(dat_q_total$quarter)
+
+dat_total <- summarise(group_by(dat), 
+                     catch_in_ton = sum(catch_in_ton, na.rm = T),
+                     no.of.samples = sum(no.of.samples, na.rm = T),
+                     no.of.length = sum(no.of.length, na.rm = T),
+                     no.of.age = sum(no.of.age, na.rm = T))
+
+dat_total$country = "Total"
+dat_total$quarter = "Total"
+
+done <- rbind(dat_sum, dat_q_total, dat_total)
+
+done$catch_in_ton <- round(done$catch_in_ton / 1000, digits = 1)
+
+done <- rename(done,
+               "Country" = "country",
+               "Quarter" = "quarter",
+               "Landings (1000 t)" = "catch_in_ton",
+               "Number of samples" = "no.of.samples",
+               "Number of lengths" = "no.of.length",
+               "Number of ages" = "no.of.age")
+
+# Flextable ----
+
+set_flextable_defaults(
+  font.family = "Calibri",
+  font.size = 7,
+  padding.bottom = 0,
+  padding.top = 0
+)
+
+t1 <- flextable(done) %>%
+  set_table_properties(width = 1, layout = "autofit") %>%
+  bold(part = "header") %>% 
+  bold(i = str_detect(done$Country, "T") == T) %>%
+  bold(i = str_detect(done$Quarter, "T") == T) %>%
+  padding(padding.bottom = 0, part = "all") %>%
+  padding(padding.top = 0, part = "all") %>%
+  bg(bg = "#B7D1C3", part = "header") %>%
+  border_inner_h(part = "all") %>%
+  set_caption(
+    caption = paste0(
+      "Table 11.2.4. North Sea and Division 3.a sprat. Sampling for biological parameters in ", year_last, ". This table only shows age- length samples, and therefore the number of samples may differ from Table 11.2.5."
+    ),
+    style = "Table Caption"
+  ) %>%
+  colformat_num(big.mark = "", na_str = "-")
+
+t1
+```
+
+```{r, eval = T}
+
+dat <- read.csv(paste0(paste0(paste0("../model/canum_weca_jul_jun_halfyear_IV_", year_last, ".csv"))), sep = ",")
+
+
+dat_1 <- select(dat, year, hy, n_samples)
+
+dat_t <- spread(dat_1, key = hy, value = n_samples, fill = 0)
+  
+dat_t <- rename(dat_t, "Model year" = "year", 
+                "Season 1" = "1",
+                "Season 2" = "2")
+
+t1 <- flextable(dat_t) %>%
+  set_table_properties(width = 1, layout = "autofit") %>%
+  bold(part = "header") %>% 
+  padding(padding.bottom = 0, part = "all") %>%
+  padding(padding.top = 0, part = "all") %>%
+  bg(bg = "#B7D1C3", part = "header") %>%
+  border_inner_h(part = "all") %>%
+  set_caption(
+    caption = paste0(
+      "Table 11.2.5. North Sea and Division 3.a sprat. Number of biological samples taken from 1974 and onward. The number of samples may differ from Table 11.2.4, since this table shows both length and age-length samples. These are the samples used to generate the catch-at-age matrix for the assessment model."
+    ),
+    style = "Table Caption"
+  ) %>%
+  colformat_num(big.mark = "", na_str = "-")
+
+t1
+```
+
